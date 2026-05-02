@@ -19,6 +19,7 @@ import searchRouter from './api/search';
 import { CleanupService } from './services/cleanup.service';
 import { NODE_ENV, PORT, TOKEN_EXPIRY_MINUTES } from './config';
 import { FileHandlerService } from './services/file/file.handler.service';
+import { authenticate } from "./middleware/auth.middleware";
 
 // Load environment variables
 dotenv.config();
@@ -35,7 +36,7 @@ app.use(express.json());
 app.use('/public', express.static(path.join(__dirname, 'public')))
 
 // Routes
-app.get('/', (req, res) => {
+app.get('/', authenticate, (req, res) => {
   const htmlContent = fileHandlerService.getFileHtml('index');
   return res.status(200).type('html').send(htmlContent);
 });

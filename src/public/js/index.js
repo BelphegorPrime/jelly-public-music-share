@@ -69,7 +69,11 @@ document.addEventListener('DOMContentLoaded', function() {
         showLoading();
 
         // Make AJAX request to search API
-        fetch(`/search?query=${encodeURIComponent(query)}`)
+        fetch(`/search?query=${encodeURIComponent(query)}`, {
+            headers: {
+                "authorization": "Basic " + btoa("admin:password") // Replace with actual credentials or token
+            }
+        })
             .then(response => response.json())
             .then(data => {
                 if (data.error) {

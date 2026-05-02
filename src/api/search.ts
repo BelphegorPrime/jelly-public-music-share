@@ -2,12 +2,13 @@ import express, { Request, Response } from 'express';
 import { container } from '../di/container';
 import { JellyfinService } from '../services/jellyfin/jellyfin.service';
 import { JELLYFIN_URL } from '../config';
+import { authenticate } from '../middleware/auth.middleware';
 
 const router = express.Router();
 const jellyfinService = container.resolve(JellyfinService);
 
 // GET /search - Search for music
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', authenticate, async (req: Request, res: Response) => {
   const { query } = req.query;
 
   if (!query || typeof query !== 'string') {

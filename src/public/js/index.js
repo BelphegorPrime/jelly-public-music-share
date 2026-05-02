@@ -1,5 +1,3 @@
-const authorizationHeader = 'Basic ' + btoa('admin:password');
-
 // Define a global function for handling request access
 window.requestAccess = function(songId, buttonElement) {
     // Show loading state to the button
@@ -11,12 +9,12 @@ window.requestAccess = function(songId, buttonElement) {
     fetch('/api/request', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'authorization': authorizationHeader
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify({
             songId: songId
-        })
+        }),
+        credentials: "include"
     })
     .then(response => response.json()) // We're getting a JSON response
     .then(data => {
@@ -73,9 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Make AJAX request to search API
         fetch(`/api/search?query=${encodeURIComponent(query)}`, {
-            headers: {
-                "authorization": authorizationHeader
-            }
+            credentials: "include"
         })
             .then(response => response.json())
             .then(data => {

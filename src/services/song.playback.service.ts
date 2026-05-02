@@ -3,7 +3,7 @@ import path from 'path';
 import { JellyfinServiceInterface } from './jellyfin/jellyfin.interface';
 import { TokenServiceInterface } from './token/token.interface';
 import { FileServiceInterface } from './file/file.interface';
-import { SONG_DOWNLOAD_DIR } from '../config';
+import { BASE_URL, SONG_DOWNLOAD_DIR } from '../config';
 import { JellyfinService } from './jellyfin/jellyfin.service';
 import { inject, injectable } from 'tsyringe';
 import { FileService } from './file/file.service';
@@ -62,7 +62,7 @@ export class SongPlaybackService {
       const token = this.tokenService.createEphemeralToken({ songId });
 
       // Return ephemeral token and play URL
-      const playUrl = `${process.env.BASE_URL || 'http://localhost:3000'}/play/${token}`;
+      const playUrl = `${BASE_URL}/play/${token}`;
       return { token, playUrl };
     } catch (error) {
       throw new Error(`Failed to publish song: ${error instanceof Error ? error.message : 'Unknown error'}`);

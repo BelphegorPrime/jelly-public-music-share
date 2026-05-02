@@ -17,7 +17,7 @@ import healthRouter from './api/health';
 import searchRouter from './api/search';
 
 import { CleanupService } from './services/cleanup.service';
-import { TOKEN_EXPIRY_MINUTES } from './config';
+import { NODE_ENV, PORT, TOKEN_EXPIRY_MINUTES } from './config';
 import { FileHandlerService } from './services/file/file.handler.service';
 
 // Load environment variables
@@ -25,7 +25,6 @@ dotenv.config();
 
 // Create Express app
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 const fileHandlerService = container.resolve(FileHandlerService)
 
@@ -65,7 +64,7 @@ setInterval(async () => {
 export default app;
 
 // Start server if not in test environment
-if (process.env.NODE_ENV !== 'test') {
+if (NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 

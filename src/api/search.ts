@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { container } from '../di/container';
 import { JellyfinService } from '../services/jellyfin/jellyfin.service';
+import { JELLYFIN_URL } from '../config';
 
 const router = express.Router();
 const jellyfinService = container.resolve(JellyfinService);
@@ -32,7 +33,7 @@ router.get('/', async (req: Request, res: Response) => {
       artist: item.ArtistItems?.[0]?.Name || 'Unknown Artist',
       duration: item.RunTimeTicks ? getDurartionInMinutesAndSeconds(item.RunTimeTicks) : 0, // Convert ticks to seconds
       type: item.Type,
-      image: item.ImageTags?.Primary ? `${process.env.JELLYFIN_URL}/Items/${item.Id}/Images/Primary?tag=${item.ImageTags.Primary}&maxWidth=200` : null
+      image: item.ImageTags?.Primary ? `${JELLYFIN_URL}/Items/${item.Id}/Images/Primary?tag=${item.ImageTags.Primary}&maxWidth=200` : null
     }));
 
     res.json({ results: formattedResults });

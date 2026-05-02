@@ -1,3 +1,5 @@
+const authorizationHeader = 'Basic ' + btoa('admin:password');
+
 // Define a global function for handling request access
 window.requestAccess = function(songId, buttonElement) {
     // Show loading state to the button
@@ -5,11 +7,12 @@ window.requestAccess = function(songId, buttonElement) {
     buttonElement.textContent = 'Requesting...';
     buttonElement.disabled = true;
 
-    // Send POST request to the /request endpoint
-    fetch('/request', {
+    // Send POST request to the /api/request endpoint
+    fetch('/api/request', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'authorization': authorizationHeader
         },
         body: JSON.stringify({
             songId: songId
@@ -69,9 +72,9 @@ document.addEventListener('DOMContentLoaded', function() {
         showLoading();
 
         // Make AJAX request to search API
-        fetch(`/search?query=${encodeURIComponent(query)}`, {
+        fetch(`/api/search?query=${encodeURIComponent(query)}`, {
             headers: {
-                "authorization": "Basic " + btoa("admin:password") // Replace with actual credentials or token
+                "authorization": authorizationHeader
             }
         })
             .then(response => response.json())

@@ -1,12 +1,13 @@
 import express, { Request, Response } from 'express';
 import { container } from '../di/container';
 import { SongPlaybackService } from '../services/song.playback.service';
+import { authenticate } from '../middleware/auth.middleware';
 
 const router = express.Router();
 const playbackService = container.resolve(SongPlaybackService);
 
-// POST /request - Request access to play a song
-router.post('/', async (req: Request, res: Response) => {
+// POST /api/request - Request access to play a song
+router.post('/', authenticate, async (req: Request, res: Response) => {
   const { songId } = req.body;
 
   if (!songId) {

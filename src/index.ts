@@ -45,11 +45,11 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-app.use('/request', requestRouter);
+app.use('/api/health', healthRouter);
+app.use('/api/search', searchRouter);
+app.use('/api/request', requestRouter);
 app.use('/play', playRouter);
 app.use('/stream', streamRouter);
-app.use('/health', healthRouter);
-app.use('/search', searchRouter);
 
 // Start cleanup timer (runs every 24 hours)
 const cleanupService = container.resolve(CleanupService);

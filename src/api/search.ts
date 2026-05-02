@@ -7,7 +7,7 @@ import { authenticate } from '../middleware/auth.middleware';
 const router = express.Router();
 const jellyfinService = container.resolve(JellyfinService);
 
-// GET /search - Search for music
+// GET /api/search - Search for music
 router.get('/', authenticate, async (req: Request, res: Response) => {
   const { query } = req.query;
 

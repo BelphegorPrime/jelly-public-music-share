@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  jpms:
+    image: ghcr.io/belphegorprime/jelly-public-music-share:latest
+    container_name: jelly-public-music-share
+    build: .
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - JELLYFIN_URL=${JELLYFIN_URL}
+      - JELLYFIN_USERNAME=${JELLYFIN_USERNAME}
+      - JELLYFIN_API_KEY=${JELLYFIN_API_KEY}
+      - TOKEN_USAGE_LIMIT=${TOKEN_USAGE_LIMIT}
+    volumes:
+      - downloads:/public/songs
+      # optinal tmp volume
+      #- tmp:/tmp
+    restart: unless-stopped
+
+volumes:
+  downloads:
+  #tmp:

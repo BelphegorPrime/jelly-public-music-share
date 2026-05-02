@@ -33,13 +33,9 @@ const fileHandlerService = container.resolve(FileHandlerService)
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-app.use('/public', express.static(path.join(__dirname, 'public')))
 
-// Routes
-app.get('/', authenticate, (req, res) => {
-  const htmlContent = fileHandlerService.getFileHtml('index');
-  return res.status(200).type('html').send(htmlContent);
-});
+const clientPath = path.join(process.cwd(), 'client/dist');
+app.use(express.static(clientPath));
 
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
@@ -50,6 +46,10 @@ app.use('/api/search', searchRouter);
 app.use('/api/request', requestRouter);
 app.use('/play', playRouter);
 app.use('/stream', streamRouter);
+
+app.get('*', authenticate, (_, res) => {
+  res.sendFile(path.join(clientPath, 'index.html'));
+});
 
 // Start cleanup timer (runs every 24 hours)
 const cleanupService = container.resolve(CleanupService);

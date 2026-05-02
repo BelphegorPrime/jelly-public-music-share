@@ -1,6 +1,16 @@
 # Jelly Public Music Share
 
+[![Under Construction](https://img.shields.io/badge/Status-Under%20Construction-red)](https://github.com/BelphegorPrime/jelly-public-music-share)
+
 A self-hosted music sharing platform.
+
+## Why I created this project
+
+I use Jellyfin for my personal music library and wanted an easy way to share rare tracks that are not available on Spotify or YouTube.
+
+Creating full Jellyfin accounts just to send someone a single song felt unnecessary, so I built a small server that searches my library and generates shareable links on demand.
+
+To keep it private and simple, links are intended to be one-time usable. Each link is backed by a JWT token, and the audio is streamed through a protected endpoint when opened.
 
 ## Features
 

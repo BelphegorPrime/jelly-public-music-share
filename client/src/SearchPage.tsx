@@ -4,10 +4,20 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
-export default function App() {
+type SearchResult = {
+  id: string,
+  artist: string,
+  duration: [number, number],
+  image: string,
+  name: string,
+  type: string
+  album?: string,
+}
+
+export default function SearchPage() {
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<SearchResult[]>([]);
   const [toast, setToast] = useState<string | null>(null);
 
   const filtered = useMemo(() => results, [results]);
@@ -25,7 +35,7 @@ export default function App() {
       const res = await fetch(`/api/search?query=${encodeURIComponent(q)}`);
       const data = await res.json();
       setResults(data.results || []);
-    } catch (e) {
+    } catch {
       showToast('Search failed');
     }
     setLoading(false);
@@ -47,7 +57,7 @@ export default function App() {
       } else {
         showToast('Failed to create link');
       }
-    } catch (e) {
+    } catch {
       showToast('Request failed');
     }
   }

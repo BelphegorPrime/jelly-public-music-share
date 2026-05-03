@@ -1,12 +1,22 @@
 import { Request, Response, NextFunction } from 'express';
 import { BASIC_AUTH_PASSWORD, BASIC_AUTH_USERNAME } from '../config';
 
+const whitelistedPaths = ['/play', '/stream', '/health', '/static', '/favicon.svg', '/.well-known'];
+
 /**
  * Basic Authentication middleware for protecting endpoints
  * This middleware validates basic auth credentials
  */
 export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
+        console.log(`Authenticating request for path: ${req.path}`);
+
+        // check for paths that are whitelisted (e.g., health check, static files)
+        if (whitelistedPaths.some(path => req.path.startsWith(path))) {
+            console.log(`Path ${req.path} is whitelisted, skipping authentication`);
+            return next();
+        }
+
         // Check for basic auth header
         const authHeader = req.headers.authorization;
 

@@ -53,7 +53,7 @@ export default function PlayPage() {
 
   // Success case - render audio player
   return (
-    <div className='grid gap-4'>
+    <div className='grid gap-4 text-zinc-100'>
       <h1>Playing Song</h1>
       <p>Audio file is loaded below:</p>
 

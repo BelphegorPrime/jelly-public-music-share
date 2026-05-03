@@ -65,7 +65,7 @@ export default function SearchPage() {
   return (
     <>
       {/* Search */}
-      <Card className='rounded-2xl bg-zinc-900 border-zinc-800'>
+      <Card className='rounded-2xl bg-zinc-900 border-zinc-800 text-zinc-100'>
         <CardContent className='p-4 flex gap-3'>
           <Input
             value={q}
@@ -82,7 +82,7 @@ export default function SearchPage() {
 
       {/* Loading */}
       {loading && (
-        <div className='flex items-center gap-2 text-zinc-400'>
+        <div className='flex items-center gap-2 text-zinc-400 justify-center mt-4'>
           <Loader2 className='animate-spin w-4 h-4' /> Searching library...
         </div>
       )}
@@ -90,7 +90,7 @@ export default function SearchPage() {
       {/* Results */}
       <div className='grid gap-4 mt-4'>
         {filtered.map(song => (
-          <Card key={song.id} className='rounded-2xl bg-zinc-900 border-zinc-800'>
+          <Card key={song.id} className='rounded-2xl bg-zinc-900 border-zinc-800 text-zinc-100'>
             <CardContent className='p-4 flex items-center gap-4'>
 
               <div className='w-14 h-14 rounded-xl bg-zinc-800 flex items-center justify-center'>

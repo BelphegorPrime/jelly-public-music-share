@@ -65,14 +65,14 @@ export default function AudioPlayer({ token }: { token: string }) {
       <AudioPlayerComponent>
         <AudioPlayerElement data={data} />
         <AudioPlayerControlBar>
-          <AudioPlayerPlayButton />
-          <AudioPlayerSeekBackwardButton seekOffset={10} />
-          <AudioPlayerSeekForwardButton seekOffset={10} />
-          <AudioPlayerTimeDisplay />
-          <AudioPlayerTimeRange />
-          <AudioPlayerDurationDisplay />
-          <AudioPlayerMuteButton />
-          <AudioPlayerVolumeRange />
+          <AudioPlayerPlayButton className="bg-zinc-900 border-zinc-800 text-zinc-100" />
+          <AudioPlayerSeekBackwardButton seekOffset={10} className="bg-zinc-900 border-zinc-800 text-zinc-100" />
+          <AudioPlayerSeekForwardButton seekOffset={10} className="bg-zinc-900 border-zinc-800 text-zinc-100" />
+          <AudioPlayerTimeDisplay className="bg-zinc-900 border-zinc-800 text-zinc-100" />
+          <AudioPlayerTimeRange  className="bg-zinc-900 border-zinc-800 text-zinc-100" />
+          <AudioPlayerDurationDisplay className="bg-zinc-900 border-zinc-800 text-zinc-100" />
+          <AudioPlayerMuteButton className="bg-zinc-900 border-zinc-800 text-zinc-100" />
+          <AudioPlayerVolumeRange className="bg-zinc-900 border-zinc-800 text-zinc-100" />
         </AudioPlayerControlBar>
       </AudioPlayerComponent>
     </div>

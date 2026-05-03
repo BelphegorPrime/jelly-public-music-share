@@ -61,7 +61,7 @@ setInterval(async () => {
   } catch (error) {
     console.error('Error during cleanup:', error);
   }
-}, TOKEN_EXPIRY_MINUTES * 1000); // 24 hours in milliseconds
+}, TOKEN_EXPIRY_MINUTES * 60 * 1000); // 24 hours in milliseconds
 
 // Export app for testing
 export default app;

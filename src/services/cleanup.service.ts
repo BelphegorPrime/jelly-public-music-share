@@ -3,7 +3,7 @@ import path from 'path';
 import { SONG_DOWNLOAD_DIR, TOKEN_EXPIRY_MINUTES } from '../config';
 
 export class CleanupService {
-  private readonly MAX_AGE_MS = TOKEN_EXPIRY_MINUTES * 1000; // 24 hours
+  private readonly MAX_AGE_MS = TOKEN_EXPIRY_MINUTES * 60 * 1000; // 24 hours
 
   /**
    * Remove old transcoded files from the song download directory

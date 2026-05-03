@@ -24,7 +24,6 @@ COPY package*.json ./
 RUN npm ci --only=production
 # Copy dependencies from backend stage
 COPY --from=backend /app/dist ./dist
-COPY --from=backend /app/src/templates ./dist/templates
 COPY --from=frontend /app/client/dist ./client/dist
 EXPOSE 3000
 CMD [ "npm", "start" ]

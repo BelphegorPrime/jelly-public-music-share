@@ -61,17 +61,17 @@ export default function AudioPlayer({ token }: { token: string }) {
   }
 
   return (
-    <div className="flex size-full items-center justify-center">
-      <AudioPlayerComponent>
+    <div className="flex h-20 w-full items-center justify-center">
+      <AudioPlayerComponent className="h-full">
         <AudioPlayerElement data={data} />
-        <AudioPlayerControlBar>
-          <AudioPlayerPlayButton />
-          <AudioPlayerSeekBackwardButton seekOffset={10} />
-          <AudioPlayerSeekForwardButton seekOffset={10} />
-          <AudioPlayerTimeDisplay />
+        <AudioPlayerControlBar className="h-full">
+          <AudioPlayerPlayButton className="h-auto w-20" />
+          <AudioPlayerSeekBackwardButton seekOffset={10} className="h-auto w-20" />
+          <AudioPlayerSeekForwardButton seekOffset={10} className="h-auto w-20" />
+          <AudioPlayerTimeDisplay className="w-20" />
           <AudioPlayerTimeRange />
-          <AudioPlayerDurationDisplay />
-          <AudioPlayerMuteButton />
+          <AudioPlayerDurationDisplay className="w-20" />
+          <AudioPlayerMuteButton className="w-20" />
           <AudioPlayerVolumeRange />
         </AudioPlayerControlBar>
       </AudioPlayerComponent>

@@ -52,7 +52,11 @@
   --shadow-lg: 0px 1px 3px 0px oklch(0.35 0.05 163.02 / 0.04), 0px 4px 6px -1px oklch(0.35 0.05 163.02 / 0.04);
   --shadow-xl: 0px 1px 3px 0px oklch(0.35 0.05 163.02 / 0.04), 0px 8px 10px -1px oklch(0.35 0.05 163.02 / 0.04);
   --shadow-2xl: 0px 1px 3px 0px oklch(0.35 0.05 163.02 / 0.10);
-  
+
+  --media-primary-color: var(--primary);
+  --media-secondary-color: var(--secondary);
+  --media-accent-color: var(--primary);
+  --media-range-bar-color: var(--primary);
 }
 
 .dark {
@@ -96,6 +100,11 @@
   --shadow-lg: 0px 1px 2px 0px oklch(0 0 0 / 0.01), 0px 4px 6px -1px oklch(0 0 0 / 0.01);
   --shadow-xl: 0px 1px 2px 0px oklch(0 0 0 / 0.01), 0px 8px 10px -1px oklch(0 0 0 / 0.01);
   --shadow-2xl: 0px 1px 2px 0px oklch(0 0 0 / 0.03);
+
+  --media-primary-color: var(--primary);
+  --media-secondary-color: var(--secondary);
+  --media-accent-color: var(--primary);
+  --media-range-bar-color: var(--primary);
 }
 
 @theme inline {
@@ -150,6 +159,8 @@
   --shadow-2xl: var(--shadow-2xl);
 
   --media-primary-color: var(--primary);
+  --media-secondary-color: var(--secondary);
+  --media-accent-color: var(--primary);
   --media-range-bar-color: var(--primary);
 }
 

@@ -10,11 +10,12 @@ import dotenv from 'dotenv';
 import { container } from './di/container';
 
 // API Routes
-import requestRouter from './api/request';
-import playRouter from './api/play';
-import streamRouter from './api/stream';
 import healthRouter from './api/health';
 import searchRouter from './api/search';
+import requestRouter from './api/request';
+import validateRouter from './api/validate';
+import playRouter from './api/play';
+import streamRouter from './api/stream';
 
 import { CleanupService } from './services/cleanup.service';
 import { NODE_ENV, PORT, TOKEN_EXPIRY_MINUTES } from './config';
@@ -27,7 +28,16 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        imgSrc: ["'self'", "https:", "data:"],
+        mediaSrc: ["'self'", "https:", "blob:", "data:"],
+      },
+    },
+  })
+);
 app.use(cors());
 app.use(express.json());
 
@@ -41,7 +51,8 @@ app.get('/health', (req, res) => {
 app.use('/api/health', healthRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/request', requestRouter);
-app.use('/play', playRouter);
+app.use('/api/validate', validateRouter);
+//app.use('/play', playRouter);
 app.use('/stream', streamRouter);
 
 app.get('*', authenticate, (_, res) => {

@@ -11,6 +11,7 @@ import { container } from './di/container';
 
 // API Routes
 import healthRouter from './api/health';
+import authRouter from './api/auth';
 import searchRouter from './api/search';
 import requestRouter from './api/request';
 import validateRouter from './api/validate';
@@ -44,6 +45,7 @@ const clientPath = path.join(process.cwd(), 'client/dist');
 app.use(express.static(clientPath));
 
 app.use('/api/health', healthRouter);
+app.use('/api/auth', authRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/request', requestRouter);
 app.use('/api/validate', validateRouter);

@@ -16,8 +16,8 @@ export const TOKEN_USAGE_LIMIT = process.env.TOKEN_USAGE_LIMIT ?
   1; // Default to 1 use before blacklisting
 export const SONG_DOWNLOAD_DIR = process.env.SONG_DOWNLOAD_DIR || '/public/songs';
 
-export const BASIC_AUTH_USERNAME = process.env.BASIC_AUTH_USERNAME || 'admin';
-export const BASIC_AUTH_PASSWORD = process.env.BASIC_AUTH_PASSWORD || 'password';
+export const AUTH_USERNAME = process.env.AUTH_USERNAME || 'admin';
+export const AUTH_PASSWORD = process.env.AUTH_PASSWORD || 'password';
 
 export const PORT = process.env.PORT || 3000;
 

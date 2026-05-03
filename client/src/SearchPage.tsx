@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Search, Music, Copy, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Music, Copy, Loader2, LogOut } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
 
 type SearchResult = {
   id: string,
@@ -19,6 +21,8 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [toast, setToast] = useState<string | null>(null);
+  const { token, user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const filtered = useMemo(() => results, [results]);
 
@@ -32,7 +36,17 @@ export default function SearchPage() {
 
     setLoading(true);
     try {
-      const res = await fetch(`/api/search?query=${encodeURIComponent(q)}`);
+      const res = await fetch(`/api/search?query=${encodeURIComponent(q)}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        showToast('Search failed');
+        return;
+      }
+
       const data = await res.json();
       setResults(data.results || []);
     } catch {
@@ -45,9 +59,17 @@ export default function SearchPage() {
     try {
       const res = await fetch('/api/request', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ songId })
       });
+
+      if (!res.ok) {
+        showToast('Request failed');
+        return;
+      }
 
       const data = await res.json();
 
@@ -62,8 +84,28 @@ export default function SearchPage() {
     }
   }
 
+  async function handleLogout() {
+    await logout();
+    navigate('/login');
+  }
+
   return (
     <>
+      {/* Header with logout */}
+      <div className='flex justify-between items-center mb-6'>
+        <div>
+          <h1 className='text-2xl font-bold'>Music Library</h1>
+          <p className='text-sm text-gray-600'>Welcome, {user?.username}</p>
+        </div>
+        <Button
+          onClick={handleLogout}
+          variant="outline"
+          className='gap-2'
+        >
+          <LogOut className='w-4 h-4' /> Logout
+        </Button>
+      </div>
+
       {/* Search */}
       <Card className='rounded-2xl'>
         <CardContent className='p-4 flex gap-3'>

@@ -65,14 +65,13 @@ export default function SearchPage() {
   return (
     <>
       {/* Search */}
-      <Card className='rounded-2xl bg-zinc-900 border-zinc-800 text-zinc-100'>
+      <Card className='rounded-2xl'>
         <CardContent className='p-4 flex gap-3'>
           <Input
             value={q}
             onChange={e => setQ(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && search()}
             placeholder='Search songs, artists, albums...'
-            className='bg-zinc-950 border-zinc-800'
           />
           <Button onClick={search} className='rounded-2xl'>
             <Search className='w-4 h-4 mr-2' /> Search
@@ -82,7 +81,7 @@ export default function SearchPage() {
 
       {/* Loading */}
       {loading && (
-        <div className='flex items-center gap-2 text-zinc-400 justify-center mt-4'>
+        <div className='flex items-center gap-2 justify-center mt-4'>
           <Loader2 className='animate-spin w-4 h-4' /> Searching library...
         </div>
       )}
@@ -90,10 +89,10 @@ export default function SearchPage() {
       {/* Results */}
       <div className='grid gap-4 mt-4'>
         {filtered.map(song => (
-          <Card key={song.id} className='rounded-2xl bg-zinc-900 border-zinc-800 text-zinc-100'>
+          <Card key={song.id} className='rounded-2xl'>
             <CardContent className='p-4 flex items-center gap-4'>
 
-              <div className='w-14 h-14 rounded-xl bg-zinc-800 flex items-center justify-center'>
+              <div className='w-14 h-14 rounded-xl flex items-center justify-center'>
                 {song.image ? (
                   <img src={song.image} className='w-full h-full rounded-xl object-cover' />
                 ) : (
@@ -103,7 +102,7 @@ export default function SearchPage() {
 
               <div className='flex-1'>
                 <div className='font-semibold'>{song.name}</div>
-                <div className='text-sm text-zinc-400'>
+                <div className='text-sm'>
                   {song.artist} • {song.album || 'Unknown Album'}
                 </div>
               </div>
@@ -122,7 +121,7 @@ export default function SearchPage() {
 
       {/* Toast */}
       {toast && (
-        <div className='fixed bottom-6 right-6 bg-zinc-800 text-white px-4 py-2 rounded-xl shadow-lg'>
+        <div className='fixed bottom-6 right-6 text-white px-4 py-2 rounded-xl shadow-lg'>
           {toast}
         </div>
       )}

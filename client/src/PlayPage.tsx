@@ -51,18 +51,10 @@ export default function PlayPage() {
     );
   }
 
-  // Success case - render audio player
   return (
     <div className='grid gap-4'>
       <h1>Playing Song</h1>
-      <p>Audio file is loaded below:</p>
-
       <AudioPlayer token={token} />
-
-      <div className="info">
-          <p><strong>Note:</strong> The audio will play directly in your browser using the HTML5 audio element.</p>
-          <p><small>This is a placeholder HTML interface page. Actual audio streaming happens via separate endpoint.</small></p>
-      </div>
     </div>
   );
 }

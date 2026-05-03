@@ -26,7 +26,7 @@ export default function AudioPlayer({ token }: { token: string }) {
     
     const fetchData = async () => {
         try {
-            const response = await fetch(`/stream/${token}`);
+            const response = await fetch(`/api/stream/${token}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }

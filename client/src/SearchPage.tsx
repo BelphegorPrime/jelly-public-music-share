@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Music, Copy, Loader2, LogOut } from 'lucide-react';
+import { Search, Loader2, LogOut } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
+import SearchSongCard from './components/SearchSongCard';
 
 type SearchResult = {
   id: string,
@@ -26,13 +27,15 @@ export default function SearchPage() {
 
   const filtered = useMemo(() => results, [results]);
 
-  function showToast(msg: string) {
+  const showToast = useCallback((msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 2000);
-  }
+  }, []);
 
   async function search() {
-    if (!q.trim()) return;
+    if (!q.trim()){
+      return;
+    }
 
     setLoading(true);
     try {
@@ -55,38 +58,13 @@ export default function SearchPage() {
     setLoading(false);
   }
 
-  async function request(songId: string) {
-    try {
-      const res = await fetch('/api/request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ songId })
-      });
-
-      if (!res.ok) {
-        showToast('Request failed');
-        return;
-      }
-
-      const data = await res.json();
-
-      if (data.playUrl) {
-        await navigator.clipboard.writeText(data.playUrl);
-        showToast('Link copied to clipboard');
-      } else {
-        showToast('Failed to create link');
-      }
-    } catch {
-      showToast('Request failed');
-    }
-  }
-
   async function handleLogout() {
     await logout();
     navigate('/login');
+  }
+
+  if (!token) {
+    return null;
   }
 
   return (
@@ -130,35 +108,7 @@ export default function SearchPage() {
 
       {/* Results */}
       <div className='grid gap-4 mt-4'>
-        {filtered.map(song => (
-          <Card key={song.id} className='rounded-2xl'>
-            <CardContent className='p-4 flex items-center gap-4'>
-
-              <div className='w-14 h-14 rounded-xl flex items-center justify-center'>
-                {song.image ? (
-                  <img src={song.image} className='w-full h-full rounded-xl object-cover' />
-                ) : (
-                  <Music className='w-6 h-6' />
-                )}
-              </div>
-
-              <div className='flex-1'>
-                <div className='font-semibold'>{song.name}</div>
-                <div className='text-sm'>
-                  {song.artist} • {song.album || 'Unknown Album'}
-                </div>
-              </div>
-
-              <Button
-                onClick={() => request(song.id)}
-                className='rounded-2xl'
-              >
-                <Copy className='w-4 h-4 mr-2' /> Create Link
-              </Button>
-
-            </CardContent>
-          </Card>
-        ))}
+        {filtered.map(song => <SearchSongCard key={song.id} song={song} token={token} showToast={showToast} />)}
       </div>
 
       {/* Toast */}

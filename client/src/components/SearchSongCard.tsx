@@ -1,0 +1,113 @@
+import { useCallback, useState, type JSX } from "react";
+import { Music, Copy } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { InputGroupCopyButton } from "@/components/input-group/buttons/input-group-copy-button";
+
+type SearchResult = {
+    id: string,
+    image: string,
+    name: string,
+    artist: string,
+    album?: string
+}
+
+const request = async (token: string, songId: string, showToast: (msg: string) => void): Promise<{ playUrl: string, token: string } | null> => {
+    try {
+      const res = await fetch('/api/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ songId })
+      });
+
+      if (!res.ok) {
+        showToast('Request failed');
+        return null;
+      }
+
+      const data = await res.json();
+
+      if (data.playUrl) {
+        await navigator.clipboard.writeText(data.playUrl);
+        showToast('Link copied to clipboard');
+      } else {
+        showToast('Failed to create link');
+      }
+      return data;
+    } catch {
+      showToast('Request failed');
+    }
+
+    return null;
+}
+
+const getButtonText = (requestStarted: boolean, requestFinished: boolean): JSX.Element => {
+    if (requestStarted && !requestFinished) {
+        return <>Requested</>
+    } else if (requestFinished) {
+        return <>Link Created</>
+    }
+    return <>
+        <Copy className='w-4 h-4 mr-2' /> Create Link
+    </>
+}
+
+export default function SearchSongCard({ song, token, showToast } : { song: SearchResult, token: string, showToast: (msg: string) => void }): JSX.Element {
+    const [data, setData] = useState<Awaited<ReturnType<typeof request>>>(null);
+    const [requestStarted, setRequestStarted] = useState(false);
+
+    const handleRequest = useCallback(async () => {
+        if (!data) {
+            setRequestStarted(true);
+            const requestData = await request(token, song.id, showToast);
+            setData(requestData);
+        } else {
+            await navigator.clipboard.writeText(data.playUrl);
+            showToast('Link copied to clipboard');
+        }
+    }, [data, token, song.id, showToast]);
+
+    return (
+        <Card key={song.id} className='rounded-2xl py-0'>
+            <CardContent className='p-4 flex items-center gap-4'>
+                <div className='w-14 h-14 rounded-xl flex items-center justify-center'>
+                    {song.image ? (
+                        <img src={song.image} className='w-full h-full rounded-xl object-cover' />
+                    ) : (
+                        <Music className='w-6 h-6' />
+                    )}
+                </div>
+
+                <div className='flex-1'>
+                    <div className='font-semibold'>
+                        {song.name}
+                    </div>
+                    <div className='text-sm'>
+                        {song.artist} • {song.album || 'Unknown Album'}
+                    </div>
+                    <div className='text-sm'>
+                        <InputGroupCopyButton
+                            value={data?.playUrl || ''}
+                            placeholder="Shareable URL"
+                            onClick={() => {
+                                if (data?.playUrl) {
+                                    navigator.clipboard.writeText(data.playUrl);
+                                    showToast('Link copied to clipboard');
+                                }
+                            }}
+                            disabled
+                            readOnly
+                        />
+                    </div>
+                </div>
+
+                <Button onClick={handleRequest} className='rounded-2xl'>
+                    {getButtonText(requestStarted, !!data?.playUrl)}
+                </Button>
+            </CardContent>
+        </Card>
+    )
+}

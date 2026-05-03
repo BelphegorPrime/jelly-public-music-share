@@ -14,7 +14,6 @@ import healthRouter from './api/health';
 import searchRouter from './api/search';
 import requestRouter from './api/request';
 import validateRouter from './api/validate';
-import playRouter from './api/play';
 import streamRouter from './api/stream';
 
 import { CleanupService } from './services/cleanup.service';
@@ -52,7 +51,6 @@ app.use('/api/health', healthRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/request', requestRouter);
 app.use('/api/validate', validateRouter);
-//app.use('/play', playRouter);
 app.use('/stream', streamRouter);
 
 app.get('*', authenticate, (_, res) => {

@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { JWT_SECRET, TOKEN_EXPIRY_MINUTES, TOKEN_USAGE_LIMIT } from '../../config';
 
-export interface TokenPayload {
+export type TokenPayload = jwt.JwtPayload & {
   tokenId: string;
   songId: string;
   expiresAt: number;
@@ -41,10 +41,13 @@ export class TokenService {
    */
   generateToken(data: { songId: string }): string {
     const tokenId = uuidv4();
+    const expiresAt = Date.now() + (this.tokenExpiryMinutes * 60 * 1000);
+    console.log(`Generating token with ID: ${tokenId} for song ID: ${data.songId}`);
+    console.log(`Token expires at: ${new Date(expiresAt).toISOString()}`);
     const payload: TokenPayload = {
       ...data,
       tokenId,
-      expiresAt: Date.now() + (this.tokenExpiryMinutes * 60 * 1000),
+      expiresAt,
     };
 
     return jwt.sign(payload, this.secret, { expiresIn: `${this.tokenExpiryMinutes}min` });
@@ -56,8 +59,8 @@ export class TokenService {
   verifyToken(token: string): TokenPayload | null {
     try {
       const decoded = jwt.verify(token, this.secret) as TokenPayload;
+      console.log(`Decoded token: ${JSON.stringify(decoded)}`);
 
-      // Check if token has expired
       if (decoded.expiresAt < Date.now()) {
         return null;
       }

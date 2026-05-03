@@ -43,15 +43,11 @@ app.use(express.json());
 const clientPath = path.join(process.cwd(), 'client/dist');
 app.use(express.static(clientPath));
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
-
 app.use('/api/health', healthRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/request', requestRouter);
 app.use('/api/validate', validateRouter);
-app.use('/stream', streamRouter);
+app.use('/api/stream', streamRouter);
 
 app.get('*', authenticate, (_, res) => {
   res.sendFile(path.join(clientPath, 'index.html'));

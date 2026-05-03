@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { BASIC_AUTH_PASSWORD, BASIC_AUTH_USERNAME } from '../config';
 
-const whitelistedPaths = ['/play', '/stream', '/health', '/static', '/favicon.svg', '/.well-known'];
+const whitelistedPaths = ['/play', '/static', '/favicon.svg', '/.well-known'];
 
 /**
  * Basic Authentication middleware for protecting endpoints

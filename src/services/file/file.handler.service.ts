@@ -43,12 +43,10 @@ export class FileHandlerService implements FileHandlerServiceInterface {
       return;
     }
 
-    // Continue with streaming logic from api/stream.ts
     res.type('audio/mpeg');
     const fileStream = fs.createReadStream(filePath);
     fileStream.pipe(res);
 
-    // Handle stream errors
     fileStream.on('error', (error) => {
       console.error('Error streaming file:', error);
       res.status(500).send('Internal server error while streaming file');

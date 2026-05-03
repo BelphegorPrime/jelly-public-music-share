@@ -48,7 +48,9 @@ const getButtonText = (requestStarted: boolean, requestFinished: boolean): JSX.E
     if (requestStarted && !requestFinished) {
         return <>Requested</>
     } else if (requestFinished) {
-        return <>Link Created</>
+        return <>
+            <Copy className='w-4 h-4 mr-2' /> Link Created
+        </>
     }
     return <>
         <Copy className='w-4 h-4 mr-2' /> Create Link

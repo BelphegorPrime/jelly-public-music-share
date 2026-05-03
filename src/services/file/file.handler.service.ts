@@ -1,12 +1,10 @@
 import fs from 'fs';
-import path from 'path';
 import { Response } from 'express';
 import { inject, injectable } from 'tsyringe';
 import { SongPlaybackService } from '../song.playback.service';
 
 export interface FileHandlerServiceInterface {
   validateFileExists(filePath: string): Promise<boolean>;
-  getFileErrorHtml(errorType: 'expired' | 'not-found' | 'access-denied'): string;
   handleFileStream(token: string, res: Response): Promise<void>;
 }
 
@@ -29,41 +27,19 @@ export class FileHandlerService implements FileHandlerServiceInterface {
     }
   }
 
-  getFileHtml(errorType: 'index'): string {
-    switch (errorType) {
-      case 'index':
-        return fs.readFileSync(path.join(__dirname, '../../templates/index.html'), 'utf8');
-      default:
-        return this.getFileErrorHtml('not-found');
-    }
-  }
-
-  getFileErrorHtml(errorType: 'expired' | 'not-found' | 'access-denied'): string {
-    switch (errorType) {
-      case 'expired':
-        return fs.readFileSync(path.join(__dirname, '../../templates/expired.html'), 'utf8');
-      case 'not-found':
-        return fs.readFileSync(path.join(__dirname, '../../templates/not-found.html'), 'utf8');
-      case 'access-denied':
-        return fs.readFileSync(path.join(__dirname, '../../templates/error.html'), 'utf8');
-      default:
-        throw new Error(`Unknown error type: ${errorType}`);
-    }
-  }
-
   async handleFileStream(token: string, res: Response): Promise<void> {
     // Shared file handling logic for streaming
     const result = await this.playbackService.playSong(token);
 
     if (!result) {
-      res.status(401).send(this.getFileErrorHtml('expired'));
+      res.status(401).json({error: 'Token is invalid or expired' });
       return;
     }
 
     const { filePath } = result;
 
     if (!(await this.validateFileExists(filePath))) {
-      res.status(404).send(this.getFileErrorHtml('not-found'));
+      res.status(404).json({ error: 'File not found' });
       return;
     }
 

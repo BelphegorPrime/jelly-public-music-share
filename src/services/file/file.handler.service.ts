@@ -32,7 +32,7 @@ export class FileHandlerService implements FileHandlerServiceInterface {
     const result = await this.playbackService.playSong(token);
 
     if (!result) {
-      res.status(401).json({ error: 'Token is invalid or expired' });
+      res.status(401).json({error: 'Token is invalid or expired' });
       return;
     }
 

@@ -1,9 +1,0 @@
-dist
-node_modules
-.env
-.env.local
-.env.*.local
-build
-coverage
-*.log
-client

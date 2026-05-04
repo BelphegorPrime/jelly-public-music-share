@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {  useEffect, useState } from 'react';
 import { ThemeContext, type Theme } from './ThemeContext';
 
 let storedTheme: Theme | null = null;
@@ -12,16 +12,14 @@ if (typeof window !== 'undefined') {
 
 let initTheme: Theme = 'light';
 if (storedTheme) {
-  initTheme = storedTheme;
+  initTheme = (storedTheme);
 } else if (systemPrefersDark) {
-  initTheme = 'dark';
+  initTheme = ('dark');
 } else {
-  initTheme = 'light';
+  initTheme = ('light');
 }
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<Theme>(initTheme);
 
   // Apply theme to document
@@ -35,7 +33,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
+    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
   };
 
   return (

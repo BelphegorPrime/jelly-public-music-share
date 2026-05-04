@@ -9,8 +9,7 @@ export class CleanupService {
   private readonly MAX_AGE_MS = TOKEN_EXPIRY_MINUTES * 60 * 1000; // 24 hours
 
   constructor(
-    @inject(RequestedSongsService)
-    private requestedSongsService: RequestedSongsService
+    @inject(RequestedSongsService) private requestedSongsService: RequestedSongsService
   ) {}
 
   /**
@@ -61,13 +60,11 @@ export class CleanupService {
     const songsCleaned = await this.cleanupSongFiles();
     const requestedSongsCleaned = this.cleanupExpiredRequests();
 
-    console.log(
-      `Cleanup completed: ${songsCleaned} song files removed, ${requestedSongsCleaned} expired requests removed`
-    );
+    console.log(`Cleanup completed: ${songsCleaned} song files removed, ${requestedSongsCleaned} expired requests removed`);
 
     return {
       songs: songsCleaned,
-      requestedSongs: requestedSongsCleaned,
+      requestedSongs: requestedSongsCleaned
     };
   }
 }

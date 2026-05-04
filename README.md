@@ -27,19 +27,16 @@ To keep it private and simple, links are intended to be one-time usable. Each li
 The easiest way to get started is using the pre-built Docker container from GitHub Container Registry:
 
 1. Download the `.env` file:
-
 ```bash
 wget https://raw.githubusercontent.com/BelphegorPrime/jelly-public-music-share/main/.env.example -O .env
 ```
 
 2. Edit the `.env` file with your Jellyfin details:
-
 ```bash
 nano .env
 ```
 
 3. Run with Docker Compose:
-
 ```bash
 wget https://raw.githubusercontent.com/BelphegorPrime/jelly-public-music-share/main/docker-compose.yml
 docker compose up -d

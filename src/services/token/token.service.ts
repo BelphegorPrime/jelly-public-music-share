@@ -2,18 +2,13 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
-import {
-  JWT_SECRET,
-  TOKEN_EXPIRY_MINUTES,
-  TOKEN_USAGE_DATA_FILE,
-  TOKEN_USAGE_LIMIT,
-} from '../../config';
+import { JWT_SECRET, TOKEN_EXPIRY_MINUTES, TOKEN_USAGE_DATA_FILE, TOKEN_USAGE_LIMIT } from '../../config';
 
 export type TokenPayload = jwt.JwtPayload & {
   tokenId: string;
   songId: string;
   expiresAt: number;
-};
+}
 
 export interface TokenUsageData {
   usageCounts: Record<string, number>;
@@ -35,7 +30,7 @@ export class TokenService {
   ) {
     this.blacklistedTokens = new Set<string>();
     this.usageCounts = new Map<string, number>();
-
+    
     // Load persisted data on initialization
     this.loadUsageData();
   }
@@ -43,19 +38,9 @@ export class TokenService {
   /**
    * Get the singleton instance of TokenService
    */
-  public static getInstance(
-    secret?: string,
-    expiryMinutes?: number,
-    usageLimit?: number,
-    dataFilePath?: string
-  ): TokenService {
+  public static getInstance(secret?: string, expiryMinutes?: number, usageLimit?: number, dataFilePath?: string): TokenService {
     if (!TokenService.instance) {
-      TokenService.instance = new TokenService(
-        secret,
-        expiryMinutes,
-        usageLimit,
-        dataFilePath
-      );
+      TokenService.instance = new TokenService(secret, expiryMinutes, usageLimit, dataFilePath);
     }
     return TokenService.instance;
   }
@@ -68,21 +53,17 @@ export class TokenService {
       if (fs.existsSync(this.dataFilePath)) {
         const data = fs.readFileSync(this.dataFilePath, 'utf-8');
         const parsed: TokenUsageData = JSON.parse(data);
-
+        
         // Restore usage counts
         this.usageCounts = new Map(Object.entries(parsed.usageCounts));
-
+        
         // Restore blacklisted tokens
         this.blacklistedTokens = new Set(parsed.blacklistedTokens);
-
+        
         console.log(`Loaded token usage data from ${this.dataFilePath}`);
-        console.log(
-          `Restored ${this.usageCounts.size} token usage records and ${this.blacklistedTokens.size} blacklisted tokens`
-        );
+        console.log(`Restored ${this.usageCounts.size} token usage records and ${this.blacklistedTokens.size} blacklisted tokens`);
       } else {
-        console.log(
-          `Token usage file does not exist yet: ${this.dataFilePath}`
-        );
+        console.log(`Token usage file does not exist yet: ${this.dataFilePath}`);
       }
     } catch (error) {
       console.error(`Error loading token usage data: ${error}`);
@@ -96,7 +77,7 @@ export class TokenService {
   private saveUsageData(): void {
     try {
       const dataDir = path.dirname(this.dataFilePath);
-
+      
       // Create data directory if it doesn't exist
       if (!fs.existsSync(dataDir)) {
         fs.mkdirSync(dataDir, { recursive: true });
@@ -107,11 +88,7 @@ export class TokenService {
         blacklistedTokens: Array.from(this.blacklistedTokens),
       };
 
-      fs.writeFileSync(
-        this.dataFilePath,
-        JSON.stringify(data, null, 2),
-        'utf-8'
-      );
+      fs.writeFileSync(this.dataFilePath, JSON.stringify(data, null, 2), 'utf-8');
       console.log(`Saved token usage data to ${this.dataFilePath}`);
     } catch (error) {
       console.error(`Error saving token usage data: ${error}`);
@@ -121,15 +98,10 @@ export class TokenService {
   /**
    * Generate a JWT token
    */
-  generateToken(data: { songId: string }): {
-    token: string;
-    expiresAt: number;
-  } {
+  generateToken(data: { songId: string }): { token: string, expiresAt: number } {
     const tokenId = uuidv4();
-    const expiresAt = Date.now() + this.expiryMinutes * 60 * 1000;
-    console.log(
-      `Generating token with ID: ${tokenId} for song ID: ${data.songId}`
-    );
+    const expiresAt = Date.now() + (this.expiryMinutes * 60 * 1000);
+    console.log(`Generating token with ID: ${tokenId} for song ID: ${data.songId}`);
     console.log(`Token expires at: ${new Date(expiresAt).toISOString()}`);
     const payload: TokenPayload = {
       ...data,
@@ -137,9 +109,7 @@ export class TokenService {
       expiresAt,
     };
 
-    const token = jwt.sign(payload, this.secret, {
-      expiresIn: `${this.expiryMinutes}min`,
-    });
+    const token = jwt.sign(payload, this.secret, { expiresIn: `${this.expiryMinutes}min` });
     return { token, expiresAt };
   }
 
@@ -186,9 +156,7 @@ export class TokenService {
     const newUsage = currentUsage + 1;
     this.usageCounts.set(verifiedToken.tokenId, newUsage);
 
-    console.log(
-      `Token ${verifiedToken.tokenId} usage: ${newUsage}/${this.usageLimit}`
-    );
+    console.log(`Token ${verifiedToken.tokenId} usage: ${newUsage}/${this.usageLimit}`);
 
     // Check if usage limit has been reached
     if (newUsage <= this.usageLimit) {
@@ -223,10 +191,7 @@ export class TokenService {
   /**
    * Generate a new ephemeral token for a song
    */
-  createEphemeralToken(data: { songId: string }): {
-    token: string;
-    expiresAt: number;
-  } {
+  createEphemeralToken(data: { songId: string }): { token: string, expiresAt: number } {
     // Token valid for 1 day (1440 minutes)
     return this.generateToken(data);
   }

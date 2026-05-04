@@ -18,7 +18,7 @@ export class TokenServiceAdapter implements TokenServiceInterface {
     if (!payload) return null;
     return {
       songId: payload.songId,
-      tokenId: payload.tokenId,
+      tokenId: payload.tokenId
     };
   }
 
@@ -27,7 +27,7 @@ export class TokenServiceAdapter implements TokenServiceInterface {
     if (!payload) return null;
     return {
       songId: payload.songId,
-      tokenId: payload.tokenId,
+      tokenId: payload.tokenId
     };
   }
 

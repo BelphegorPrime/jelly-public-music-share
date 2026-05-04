@@ -3,7 +3,7 @@ import path from 'path';
 import { JellyfinServiceInterface } from './jellyfin/jellyfin.interface';
 import { TokenServiceInterface } from './token/token.interface';
 import { FileServiceInterface } from './file/file.interface';
-import { BASE_URL, SONG_DOWNLOAD_DIR, TOKEN_EXPIRY_MINUTES } from '../config';
+import { BASE_URL } from '../config';
 import { JellyfinService } from './jellyfin/jellyfin.service';
 import { inject, injectable } from 'tsyringe';
 import { FileService } from './file/file.service';

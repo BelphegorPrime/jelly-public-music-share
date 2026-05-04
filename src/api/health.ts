@@ -7,7 +7,7 @@ router.get('/', (req: Request, res: Response) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    service: 'Jelly Public Music Share'
+    service: 'Jelly Public Music Share',
   });
 });
 

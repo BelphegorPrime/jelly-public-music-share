@@ -24,7 +24,6 @@ function AppRoutes() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>
-
   );
 }
 

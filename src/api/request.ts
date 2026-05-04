@@ -24,7 +24,7 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       error: 'Failed to request song',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });
@@ -37,7 +37,7 @@ router.get('/', authenticate, (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).json({
       error: 'Failed to fetch requested songs',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
 });

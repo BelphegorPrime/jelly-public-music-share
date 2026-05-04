@@ -1,6 +1,11 @@
 import express, { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET, TOKEN_EXPIRY_MINUTES, AUTH_USERNAME, AUTH_PASSWORD } from '../config';
+import {
+  JWT_SECRET,
+  TOKEN_EXPIRY_MINUTES,
+  AUTH_USERNAME,
+  AUTH_PASSWORD,
+} from '../config';
 
 const router = express.Router();
 
@@ -16,11 +21,13 @@ router.post('/login', async (req: Request, res: Response) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password are required' });
+      return res
+        .status(400)
+        .json({ error: 'Username and password are required' });
     }
 
     // Validate credentials against environment variables
-      if (username !== AUTH_USERNAME || password !== AUTH_PASSWORD) {
+    if (username !== AUTH_USERNAME || password !== AUTH_PASSWORD) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 

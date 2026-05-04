@@ -1,7 +1,7 @@
-import "reflect-metadata";
+import 'reflect-metadata';
 
-import fs from "node:fs";
-import path from "node:path";
+import fs from 'node:fs';
+import path from 'node:path';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -18,8 +18,13 @@ import validateRouter from './api/validate';
 import streamRouter from './api/stream';
 
 import { CleanupService } from './services/cleanup.service';
-import { NODE_ENV, PORT, SONG_DOWNLOAD_DIR, TOKEN_EXPIRY_MINUTES } from './config';
-import { authenticate } from "./middleware/auth.middleware";
+import {
+  NODE_ENV,
+  PORT,
+  SONG_DOWNLOAD_DIR,
+  TOKEN_EXPIRY_MINUTES,
+} from './config';
+import { authenticate } from './middleware/auth.middleware';
 
 if (!fs.existsSync(SONG_DOWNLOAD_DIR)) {
   fs.mkdirSync(SONG_DOWNLOAD_DIR, { recursive: true });
@@ -33,8 +38,8 @@ app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
-        imgSrc: ["'self'", "https:", "data:"],
-        mediaSrc: ["'self'", "https:", "blob:", "data:"],
+        imgSrc: ["'self'", 'https:', 'data:'],
+        mediaSrc: ["'self'", 'https:', 'blob:', 'data:'],
       },
     },
   })
@@ -58,13 +63,16 @@ app.get('*', authenticate, (_, res) => {
 
 // Start cleanup timer (runs every 24 hours)
 const cleanupService = container.resolve(CleanupService);
-setInterval(async () => {
-  try {
-    await cleanupService.cleanup();
-  } catch (error) {
-    console.error('Error during cleanup:', error);
-  }
-}, TOKEN_EXPIRY_MINUTES * 60 * 1000); // 24 hours in milliseconds
+setInterval(
+  async () => {
+    try {
+      await cleanupService.cleanup();
+    } catch (error) {
+      console.error('Error during cleanup:', error);
+    }
+  },
+  TOKEN_EXPIRY_MINUTES * 60 * 1000
+); // 24 hours in milliseconds
 
 // Export app for testing
 export default app;
@@ -75,7 +83,8 @@ if (NODE_ENV !== 'test') {
     console.log(`Server running on port ${PORT}`);
 
     // Run cleanup immediately on startup to clean up any lingering files
-    cleanupService.cleanup()
-      .catch(error => console.error('Initial cleanup failed:', error));
+    cleanupService
+      .cleanup()
+      .catch((error) => console.error('Initial cleanup failed:', error));
   });
 }

@@ -8,14 +8,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import SearchSongCard from './components/SearchSongCard';
 
 type SearchResult = {
-  id: string,
-  artist: string,
-  duration: [number, number],
-  image: string,
-  name: string,
-  type: string
-  album?: string,
-}
+  id: string;
+  artist: string;
+  duration: [number, number];
+  image: string;
+  name: string;
+  type: string;
+  album?: string;
+};
 
 export type RequestedSong = {
   songId: string;
@@ -23,19 +23,22 @@ export type RequestedSong = {
   playUrl: string;
   requestedAt: number;
   expiresAt: number;
-}
+};
 
-const fetchRequestedSongs = async (token: string, callback: (requestedSongs: RequestedSong[]) => void) => {
-  fetch("/api/request", {
+const fetchRequestedSongs = async (
+  token: string,
+  callback: (requestedSongs: RequestedSong[]) => void
+) => {
+  fetch('/api/request', {
     headers: {
-      'Authorization': `Bearer ${token}`
-    }
+      Authorization: `Bearer ${token}`,
+    },
   })
-    .then(res => res.json())
-    .then(data => {
+    .then((res) => res.json())
+    .then((data) => {
       callback(data || []);
-    })
-}
+    });
+};
 
 export default function SearchPage() {
   const [q, setQ] = useState('');
@@ -48,12 +51,12 @@ export default function SearchPage() {
 
   const refreshRequestedSongs = useCallback(() => {
     if (!token) {
-        return;
+      return;
     }
     fetchRequestedSongs(token, setRequestedSongs);
   }, [token]);
 
-  useEffect( () => refreshRequestedSongs(), [refreshRequestedSongs]);
+  useEffect(() => refreshRequestedSongs(), [refreshRequestedSongs]);
 
   const filtered = useMemo(() => results, [results]);
 
@@ -63,7 +66,7 @@ export default function SearchPage() {
   }, []);
 
   async function search() {
-    if (!q.trim()){
+    if (!q.trim()) {
       return;
     }
 
@@ -71,8 +74,8 @@ export default function SearchPage() {
     try {
       const res = await fetch(`/api/search?query=${encodeURIComponent(q)}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!res.ok) {
@@ -100,45 +103,41 @@ export default function SearchPage() {
   return (
     <>
       {/* Header with logout */}
-      <div className='flex justify-between items-center mb-6'>
+      <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className='text-2xl font-bold'>Music Library</h1>
-          <p className='text-sm text-gray-600'>Welcome, {user?.username}</p>
+          <h1 className="text-2xl font-bold">Music Library</h1>
+          <p className="text-sm text-gray-600">Welcome, {user?.username}</p>
         </div>
-        <Button
-          onClick={handleLogout}
-          variant="outline"
-          className='gap-2'
-        >
-          <LogOut className='w-4 h-4' /> Logout
+        <Button onClick={handleLogout} variant="outline" className="gap-2">
+          <LogOut className="h-4 w-4" /> Logout
         </Button>
       </div>
 
       {/* Search */}
-      <Card className='rounded-2xl'>
-        <CardContent className='p-4 flex gap-3'>
+      <Card className="rounded-2xl">
+        <CardContent className="flex gap-3 p-4">
           <Input
             value={q}
-            onChange={e => setQ(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && search()}
-            placeholder='Search songs, artists, albums...'
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && search()}
+            placeholder="Search songs, artists, albums..."
           />
-          <Button onClick={search} className='rounded-2xl'>
-            <Search className='w-4 h-4 mr-2' /> Search
+          <Button onClick={search} className="rounded-2xl">
+            <Search className="mr-2 h-4 w-4" /> Search
           </Button>
         </CardContent>
       </Card>
 
       {/* Loading */}
       {loading && (
-        <div className='flex items-center gap-2 justify-center mt-4'>
-          <Loader2 className='animate-spin w-4 h-4' /> Searching library...
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" /> Searching library...
         </div>
       )}
 
       {/* Results */}
-      <div className='grid gap-4 mt-4'>
-        {filtered.map(song => (
+      <div className="mt-4 grid gap-4">
+        {filtered.map((song) => (
           <SearchSongCard
             key={song.id}
             song={song}
@@ -152,7 +151,7 @@ export default function SearchPage() {
 
       {/* Toast */}
       {toast && (
-        <div className='fixed bottom-6 right-6 text-white px-4 py-2 rounded-xl shadow-lg'>
+        <div className="fixed bottom-6 right-6 rounded-xl px-4 py-2 text-white shadow-lg">
           {toast}
         </div>
       )}

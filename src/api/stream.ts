@@ -17,7 +17,7 @@ router.get('/:token', async (req: Request, res: Response) => {
     // Use centralized file handler service
     await fileHandlerService.handleFileStream(token, res);
   } catch (error) {
-    console.log("Error in /api/stream/:token route:", error);
+    console.log('Error in /api/stream/:token route:', error);
     res.status(500).send('Internal server error');
   }
 });

@@ -8,7 +8,10 @@
     "dev": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
     "dev:server": "nodemon --exec ts-node src/index.ts",
     "build": "npm run build:server",
-    "build:server": "tsc"
+    "build:server": "tsc",
+    "lint": "eslint src --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [
     "music",
@@ -42,6 +45,7 @@
     "@typescript-eslint/parser": "^6.4.1",
     "eslint": "^8.47.0",
     "nodemon": "^3.0.1",
+    "prettier": "^3.2.5",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.6"
   }

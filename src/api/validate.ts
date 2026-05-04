@@ -19,7 +19,14 @@ router.get('/:token', async (req: Request, res: Response<ValidateResponse>) => {
   const { token } = req.params;
 
   if (!token) {
-      return res.status(400).json({ valid: false, expired: false, notFound: false, error: 'Token is required' });
+    return res
+      .status(400)
+      .json({
+        valid: false,
+        expired: false,
+        notFound: false,
+        error: 'Token is required',
+      });
   }
 
   try {
@@ -27,24 +34,45 @@ router.get('/:token', async (req: Request, res: Response<ValidateResponse>) => {
     const result = await playbackService.playSong(token, true);
 
     if (!result) {
-        return res.status(401).json({ valid: false, expired: true, notFound: false, error: 'Token is invalid or expired' });
+      return res
+        .status(401)
+        .json({
+          valid: false,
+          expired: true,
+          notFound: false,
+          error: 'Token is invalid or expired',
+        });
     }
     console.log('Play song result:', result);
     const { filePath } = result;
 
     // Check if file exists before attempting to stream
     try {
-        await fileHandlerService.validateFileExists(filePath);
-        console.log(`File exists, allow playback: ${filePath}`);
+      await fileHandlerService.validateFileExists(filePath);
+      console.log(`File exists, allow playback: ${filePath}`);
     } catch (error) {
-        console.log(`File doesn't exist: ${filePath}`);
-        return res.status(404).json({ valid: false, expired: false, notFound: true, error: 'File not found' });
+      console.log(`File doesn't exist: ${filePath}`);
+      return res
+        .status(404)
+        .json({
+          valid: false,
+          expired: false,
+          notFound: true,
+          error: 'File not found',
+        });
     }
 
     return res.status(200).json({ valid: true });
   } catch (error) {
-    console.log("Error in /play/:token route:", error);
-    return res.status(200).json({ valid: false, expired: false, notFound: false, error: "Internal Server Error" });
+    console.log('Error in /play/:token route:', error);
+    return res
+      .status(200)
+      .json({
+        valid: false,
+        expired: false,
+        notFound: false,
+        error: 'Internal Server Error',
+      });
   }
 });
 

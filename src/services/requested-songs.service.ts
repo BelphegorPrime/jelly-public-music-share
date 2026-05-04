@@ -19,9 +19,7 @@ export interface RequestedSongsData {
 export class RequestedSongsService {
   private dataFilePath: string;
 
-  constructor(
-    @inject('REQUESTED_SONGS_DATA_FILE') dataFilePath?: string
-  ) {
+  constructor(@inject('REQUESTED_SONGS_DATA_FILE') dataFilePath?: string) {
     this.dataFilePath = dataFilePath || REQUESTED_SONGS_DATA_FILE;
   }
 
@@ -54,7 +52,11 @@ export class RequestedSongsService {
         fs.mkdirSync(dataDir, { recursive: true });
       }
 
-      fs.writeFileSync(this.dataFilePath, JSON.stringify(data, null, 2), 'utf-8');
+      fs.writeFileSync(
+        this.dataFilePath,
+        JSON.stringify(data, null, 2),
+        'utf-8'
+      );
       console.log(`Saved requested songs data to ${this.dataFilePath}`);
     } catch (error) {
       console.error(`Error saving requested songs data: ${error}`);
@@ -64,7 +66,12 @@ export class RequestedSongsService {
   /**
    * Add a requested song
    */
-  addRequestedSong(songId: string, token: string, playUrl: string, expiresAt: number): void {
+  addRequestedSong(
+    songId: string,
+    token: string,
+    playUrl: string,
+    expiresAt: number
+  ): void {
     const data = this.loadData();
 
     const requestedSong: RequestedSong = {
@@ -78,7 +85,9 @@ export class RequestedSongsService {
     data.songs.push(requestedSong);
     this.saveData(data);
 
-    console.log(`Added requested song: ${songId} (expires at ${new Date(expiresAt).toISOString()})`);
+    console.log(
+      `Added requested song: ${songId} (expires at ${new Date(expiresAt).toISOString()})`
+    );
   }
 
   /**
@@ -89,7 +98,7 @@ export class RequestedSongsService {
     const now = Date.now();
 
     // Filter out expired songs
-    const validSongs = data.songs.filter(song => song.expiresAt > now);
+    const validSongs = data.songs.filter((song) => song.expiresAt > now);
 
     return validSongs;
   }
@@ -102,7 +111,7 @@ export class RequestedSongsService {
     const now = Date.now();
 
     const beforeCount = data.songs.length;
-    data.songs = data.songs.filter(song => song.expiresAt > now);
+    data.songs = data.songs.filter((song) => song.expiresAt > now);
     const afterCount = data.songs.length;
 
     if (beforeCount > afterCount) {

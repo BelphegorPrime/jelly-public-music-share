@@ -6,7 +6,11 @@ import { Jellyfin, Api } from '@jellyfin/sdk';
 import { getItemsApi } from '@jellyfin/sdk/lib/utils/api/items-api';
 import { getUserApi } from '@jellyfin/sdk/lib/utils/api/user-api';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
-import { JELLYFIN_URL, JELLYFIN_USERNAME, JELLYFIN_API_KEY } from '../../config';
+import {
+  JELLYFIN_URL,
+  JELLYFIN_USERNAME,
+  JELLYFIN_API_KEY,
+} from '../../config';
 import { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
 import { Readable } from 'node:stream';
 
@@ -30,17 +34,14 @@ export class JellyfinService {
     this.jellyfinSdk = new Jellyfin({
       clientInfo: {
         name: 'Jelly Public Music Share',
-        version: '1.0.0'
+        version: '1.0.0',
       },
       deviceInfo: {
         name: 'Jelly Public Music Share',
         id: 'jelly-public-music-share-device',
-      }
+      },
     });
-    this.api = this.jellyfinSdk.createApi(
-      this.baseUrl,
-      this.apiKey
-    );
+    this.api = this.jellyfinSdk.createApi(this.baseUrl, this.apiKey);
     this.itemsApi = getItemsApi(this.api);
     this.userApi = getUserApi(this.api);
     this.libraryApi = getLibraryApi(this.api);
@@ -55,7 +56,7 @@ export class JellyfinService {
     try {
       // First get the user ID by username
       const usersResponse = await this.userApi.getUsers();
-      const user = usersResponse.data.find(u => u.Name === this.username);
+      const user = usersResponse.data.find((u) => u.Name === this.username);
 
       if (!user?.Id) {
         console.error(`User '${this.username}' not found`);
@@ -68,7 +69,7 @@ export class JellyfinService {
         userId: user.Id,
         includeItemTypes: ['Audio'],
         recursive: true,
-        fields: []
+        fields: [],
       });
 
       return response.data.Items || [];
@@ -85,7 +86,7 @@ export class JellyfinService {
     }
 
     const items = await this.getMusicLibrary([itemId]);
-    const item = items.find(i => i.Id === itemId);
+    const item = items.find((i) => i.Id === itemId);
     if (item) {
       return item;
     }
@@ -109,7 +110,9 @@ export class JellyfinService {
         fields: ['PrimaryImageAspectRatio', 'CanDelete', 'MediaSourceCount'],
         includeItemTypes: ['Playlist', 'MusicAlbum', 'Audio'],
       });
-      console.log(`Search for "${query}" returned ${response.data.Items?.length || 0} items`);
+      console.log(
+        `Search for "${query}" returned ${response.data.Items?.length || 0} items`
+      );
 
       return response.data.Items || [];
     } catch (error) {
@@ -119,18 +122,22 @@ export class JellyfinService {
     }
   }
 
-  async download(itemId: string, itemInfo: BaseItemDto, destinationPath: string): Promise<void> {
+  async download(
+    itemId: string,
+    itemInfo: BaseItemDto,
+    destinationPath: string
+  ): Promise<void> {
     // Generate unique filename and token using JWT service
     const extension = itemInfo.Container ? `.${itemInfo.Container}` : '.mp3';
     const safeFileName = `${itemInfo.Name}${extension}`;
     const fileName = `${itemId}_${safeFileName}`;
 
-    const downloadLocation = path.join("/tmp", fileName);
+    const downloadLocation = path.join('/tmp', fileName);
 
     const response = await this.libraryApi.getFile(
       { itemId },
       {
-        responseType: "stream"
+        responseType: 'stream',
       }
     );
 
@@ -141,8 +148,8 @@ export class JellyfinService {
 
       stream.pipe(writer);
 
-      writer.on("finish", () => resolve(undefined));
-      writer.on("error", reject);
+      writer.on('finish', () => resolve(undefined));
+      writer.on('error', reject);
     });
 
     // Transcode to MP3 after download
@@ -154,7 +161,10 @@ export class JellyfinService {
    * @param filePath Path to the file to be transcoded
    * @param destinationPath Path where the transcoded file should be saved
    */
-  private async transcodeToMP3(filePath: string, destinationPath: string): Promise<void> {
+  private async transcodeToMP3(
+    filePath: string,
+    destinationPath: string
+  ): Promise<void> {
     try {
       // Run ffmpeg command to convert to MP3
       const command = `ffmpeg -i "${filePath}" -acodec libmp3lame "${destinationPath}"`;

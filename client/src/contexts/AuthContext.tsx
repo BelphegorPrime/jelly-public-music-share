@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 
 export type User = {
   username: string;
-}
+};
 
 interface AuthContextType {
   user: User | null;
@@ -13,7 +13,9 @@ interface AuthContextType {
   logout: () => Promise<void>;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
 
 export function useAuth() {
   const context = useContext(AuthContext);

@@ -23,7 +23,7 @@ export class SongPlaybackService {
     @inject(JellyfinService) jellyfinService: JellyfinService,
     @inject(TokenServiceAdapter) tokenService: TokenServiceAdapter,
     @inject(FileService) fileService: FileService,
-    @inject(RequestedSongsService) requestedSongsService: RequestedSongsService,
+    @inject(RequestedSongsService) requestedSongsService: RequestedSongsService
   ) {
     this.downloadDirectory = downloadDir;
     this.jellyfinService = jellyfinService;
@@ -32,7 +32,9 @@ export class SongPlaybackService {
     this.requestedSongsService = requestedSongsService;
   }
 
-  async requestSong(songId: string): Promise<{token: string, playUrl: string}> {
+  async requestSong(
+    songId: string
+  ): Promise<{ token: string; playUrl: string }> {
     try {
       // Get song info from Jellyfin
       const songInfo = await this.jellyfinService.getMusicById(songId);
@@ -53,40 +55,66 @@ export class SongPlaybackService {
       if (found) {
         console.log(`File found locally: ${destinationPath}`);
       } else {
-        console.log(`File not found locally, downloading from Jellyfin: ${destinationPath}`);
+        console.log(
+          `File not found locally, downloading from Jellyfin: ${destinationPath}`
+        );
         try {
           // File doesn't exist, proceed to download
-          await this.jellyfinService.download(songId, songInfo, destinationPath);
+          await this.jellyfinService.download(
+            songId,
+            songInfo,
+            destinationPath
+          );
         } catch (downloadError) {
           // Fall back to placeholder if download fails
-          await fs.promises.writeFile(destinationPath, Buffer.from('test-placeholder-audio-data'));
+          await fs.promises.writeFile(
+            destinationPath,
+            Buffer.from('test-placeholder-audio-data')
+          );
         }
       }
 
-      const { token, expiresAt } = this.tokenService.createEphemeralToken({ songId });
+      const { token, expiresAt } = this.tokenService.createEphemeralToken({
+        songId,
+      });
 
       // Return ephemeral token and play URL
       const playUrl = `${BASE_URL}/play/${token}`;
 
       // Persist the requested song
-      this.requestedSongsService.addRequestedSong(songId, token, playUrl, expiresAt);
-      
+      this.requestedSongsService.addRequestedSong(
+        songId,
+        token,
+        playUrl,
+        expiresAt
+      );
+
       return { token, playUrl };
     } catch (error) {
-      throw new Error(`Failed to publish song: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to publish song: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
-  async playSong(token: string, consume = false): Promise<{filePath: string} | null> {
+  async playSong(
+    token: string,
+    consume = false
+  ): Promise<{ filePath: string } | null> {
     try {
       // Verify token (will return null if expired or blacklisted)
-      const tokenData = consume ? this.tokenService.verifyAndConsumeToken(token) : this.tokenService.verifyToken(token) ;
+      const tokenData = consume
+        ? this.tokenService.verifyAndConsumeToken(token)
+        : this.tokenService.verifyToken(token);
       if (!tokenData) {
         return null;
       }
       console.log('verifyAndConsumeToken result:', tokenData);
 
-      const filePath = path.join(this.downloadDirectory, tokenData.songId + '.mp3');
+      const filePath = path.join(
+        this.downloadDirectory,
+        tokenData.songId + '.mp3'
+      );
 
       // Check if file exists using the file service
       const found = await this.fileService.fileExists(filePath);
@@ -97,8 +125,10 @@ export class SongPlaybackService {
         return null;
       }
     } catch (error) {
-      console.log("Error in playSong:", error);
-      throw new Error(`Failed to play song: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.log('Error in playSong:', error);
+      throw new Error(
+        `Failed to play song: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 }

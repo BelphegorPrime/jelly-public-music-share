@@ -1,10 +1,10 @@
 import "reflect-metadata";
 
+import fs from "node:fs";
 import path from "node:path";
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 
 // DI Container
 import { container } from './di/container';
@@ -18,11 +18,12 @@ import validateRouter from './api/validate';
 import streamRouter from './api/stream';
 
 import { CleanupService } from './services/cleanup.service';
-import { NODE_ENV, PORT, TOKEN_EXPIRY_MINUTES } from './config';
+import { NODE_ENV, PORT, SONG_DOWNLOAD_DIR, TOKEN_EXPIRY_MINUTES } from './config';
 import { authenticate } from "./middleware/auth.middleware";
 
-// Load environment variables
-dotenv.config();
+if (!fs.existsSync(SONG_DOWNLOAD_DIR)) {
+  fs.mkdirSync(SONG_DOWNLOAD_DIR, { recursive: true });
+}
 
 // Create Express app
 const app = express();

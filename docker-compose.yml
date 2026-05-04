@@ -6,7 +6,7 @@ services:
     container_name: jelly-public-music-share
     build: .
     ports:
-      - "3000:3000"
+      - 3000:3000
     env_file:
       - .env
     environment:
@@ -17,7 +17,7 @@ services:
       - AUTH_PASSWORD=${AUTH_PASSWORD}
       - TOKEN_USAGE_LIMIT=${TOKEN_USAGE_LIMIT}
     volumes:
-      - downloads:/public/songs
+      - downloads:/app
       # optinal tmp volume
       #- tmp:/tmp
     restart: unless-stopped

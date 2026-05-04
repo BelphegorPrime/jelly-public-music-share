@@ -3,6 +3,15 @@ import { Music, Copy } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { InputGroupCopyButton } from "@/components/input-group/buttons/input-group-copy-button";
+import type { RequestedSong } from "@/SearchPage";
+
+type SearchSongCardProps = {
+    token: string,
+    song: SearchResult,
+    requestedSongs: RequestedSong[],
+    refreshRequestedSongs: () => void,
+    showToast: (msg: string) => void
+}
 
 type SearchResult = {
     id: string,
@@ -57,20 +66,35 @@ const getButtonText = (requestStarted: boolean, requestFinished: boolean): JSX.E
     </>
 }
 
-export default function SearchSongCard({ song, token, showToast } : { song: SearchResult, token: string, showToast: (msg: string) => void }): JSX.Element {
-    const [data, setData] = useState<Awaited<ReturnType<typeof request>>>(null);
+export default function SearchSongCard({
+    token,
+    song,
+    requestedSongs,
+    refreshRequestedSongs,
+    showToast
+} : SearchSongCardProps): JSX.Element {
+    const [data, setData] = useState<Awaited<ReturnType<typeof request>> | null>(null);
     const [requestStarted, setRequestStarted] = useState(false);
+
+    const copyToClipboard = useCallback(async (url: string) => {
+        await navigator.clipboard.writeText(url);
+        showToast('Link copied to clipboard');
+    }, [showToast]);
 
     const handleRequest = useCallback(async () => {
         if (!data) {
             setRequestStarted(true);
             const requestData = await request(token, song.id, showToast);
             setData(requestData);
+            refreshRequestedSongs();
         } else {
-            await navigator.clipboard.writeText(data.playUrl);
-            showToast('Link copied to clipboard');
+            copyToClipboard(data.playUrl);
         }
-    }, [data, token, song.id, showToast]);
+    }, [data, token, song.id, refreshRequestedSongs, showToast, copyToClipboard]);
+
+
+    const requestsForSong = requestedSongs.filter(rs => rs.songId === song.id);
+    console.log('Requested song for', song.name, ':', { requestsForSong });
 
     return (
         <Card key={song.id} className='rounded-2xl py-0'>
@@ -85,7 +109,7 @@ export default function SearchSongCard({ song, token, showToast } : { song: Sear
 
                 <div className='flex-1'>
                     <div className='font-semibold'>
-                        {song.name}
+                        {song.name} {requestsForSong.length > 0 && <span className='text-sm text-gray-500'>({requestsForSong.length} requested)</span>}
                     </div>
                     <div className='text-sm'>
                         {song.artist} • {song.album || 'Unknown Album'}
@@ -96,14 +120,14 @@ export default function SearchSongCard({ song, token, showToast } : { song: Sear
                             placeholder="Shareable URL"
                             onClick={() => {
                                 if (data?.playUrl) {
-                                    navigator.clipboard.writeText(data.playUrl);
-                                    showToast('Link copied to clipboard');
+                                    copyToClipboard(data.playUrl);
                                 }
                             }}
                             disabled
                             readOnly
                         />
                     </div>
+                    
                 </div>
 
                 <Button onClick={handleRequest} className='rounded-2xl'>

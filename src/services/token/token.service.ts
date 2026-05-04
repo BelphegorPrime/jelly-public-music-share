@@ -98,7 +98,7 @@ export class TokenService {
   /**
    * Generate a JWT token
    */
-  generateToken(data: { songId: string }): string {
+  generateToken(data: { songId: string }): { token: string, expiresAt: number } {
     const tokenId = uuidv4();
     const expiresAt = Date.now() + (this.expiryMinutes * 60 * 1000);
     console.log(`Generating token with ID: ${tokenId} for song ID: ${data.songId}`);
@@ -109,7 +109,8 @@ export class TokenService {
       expiresAt,
     };
 
-    return jwt.sign(payload, this.secret, { expiresIn: `${this.expiryMinutes}min` });
+    const token = jwt.sign(payload, this.secret, { expiresIn: `${this.expiryMinutes}min` });
+    return { token, expiresAt };
   }
 
   /**
@@ -190,7 +191,7 @@ export class TokenService {
   /**
    * Generate a new ephemeral token for a song
    */
-  createEphemeralToken(data: { songId: string }): string {
+  createEphemeralToken(data: { songId: string }): { token: string, expiresAt: number } {
     // Token valid for 1 day (1440 minutes)
     return this.generateToken(data);
   }

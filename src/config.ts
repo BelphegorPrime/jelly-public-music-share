@@ -14,8 +14,9 @@ export const TOKEN_EXPIRY_MINUTES = process.env.TOKEN_EXPIRY_MINUTES ?
 export const TOKEN_USAGE_LIMIT = process.env.TOKEN_USAGE_LIMIT ?
   parseInt(process.env.TOKEN_USAGE_LIMIT) :
   1; // Default to 1 use before blacklisting
-export const SONG_DOWNLOAD_DIR = process.env.SONG_DOWNLOAD_DIR || '/app/songs';
-export const TOKEN_USAGE_DATA_FILE = process.env.TOKEN_USAGE_DATA_FILE || '/app/token-usage.json';
+export const SONG_DOWNLOAD_DIR = process.env.SONG_DOWNLOAD_DIR || '/data/songs';
+export const TOKEN_USAGE_DATA_FILE = process.env.TOKEN_USAGE_DATA_FILE || '/data/tokens.json';
+export const REQUESTED_SONGS_DATA_FILE = process.env.REQUESTED_SONGS_DATA_FILE || '/data/requested-songs.json';
 
 export const AUTH_USERNAME = process.env.AUTH_USERNAME || 'admin';
 export const AUTH_PASSWORD = process.env.AUTH_PASSWORD || 'password';

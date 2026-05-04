@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Loader2, LogOut } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,13 +17,43 @@ type SearchResult = {
   album?: string,
 }
 
+export type RequestedSong = {
+  songId: string;
+  token: string;
+  playUrl: string;
+  requestedAt: number;
+  expiresAt: number;
+}
+
+const fetchRequestedSongs = async (token: string, callback: (requestedSongs: RequestedSong[]) => void) => {
+  fetch("/api/request", {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+    .then(res => res.json())
+    .then(data => {
+      callback(data || []);
+    })
+}
+
 export default function SearchPage() {
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
+  const [requestedSongs, setRequestedSongs] = useState<RequestedSong[]>([]);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const { token, user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const refreshRequestedSongs = useCallback(() => {
+    if (!token) {
+        return;
+    }
+    fetchRequestedSongs(token, setRequestedSongs);
+  }, [token]);
+
+  useEffect( () => refreshRequestedSongs(), [refreshRequestedSongs]);
 
   const filtered = useMemo(() => results, [results]);
 
@@ -108,7 +138,16 @@ export default function SearchPage() {
 
       {/* Results */}
       <div className='grid gap-4 mt-4'>
-        {filtered.map(song => <SearchSongCard key={song.id} song={song} token={token} showToast={showToast} />)}
+        {filtered.map(song => (
+          <SearchSongCard
+            key={song.id}
+            song={song}
+            requestedSongs={requestedSongs}
+            refreshRequestedSongs={refreshRequestedSongs}
+            token={token}
+            showToast={showToast}
+          />
+        ))}
       </div>
 
       {/* Toast */}

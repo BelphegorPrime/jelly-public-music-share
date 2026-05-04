@@ -1,9 +1,16 @@
 import fs from 'fs';
 import path from 'path';
+import { injectable, inject } from 'tsyringe';
 import { SONG_DOWNLOAD_DIR, TOKEN_EXPIRY_MINUTES } from '../config';
+import { RequestedSongsService } from './requested-songs.service';
 
+@injectable()
 export class CleanupService {
   private readonly MAX_AGE_MS = TOKEN_EXPIRY_MINUTES * 60 * 1000; // 24 hours
+
+  constructor(
+    @inject(RequestedSongsService) private requestedSongsService: RequestedSongsService
+  ) {}
 
   /**
    * Remove old transcoded files from the song download directory
@@ -40,15 +47,24 @@ export class CleanupService {
   }
 
   /**
+   * Clean up expired requested songs
+   */
+  cleanupExpiredRequests(): number {
+    return this.requestedSongsService.cleanupExpiredRequests();
+  }
+
+  /**
    * Perform all cleanup operations
    */
-  async cleanup(): Promise<{ songs: number }> {
+  async cleanup(): Promise<{ songs: number; requestedSongs: number }> {
     const songsCleaned = await this.cleanupSongFiles();
+    const requestedSongsCleaned = this.cleanupExpiredRequests();
 
-    console.log(`Cleanup completed: ${songsCleaned} song files removed`);
+    console.log(`Cleanup completed: ${songsCleaned} song files removed, ${requestedSongsCleaned} expired requests removed`);
 
     return {
-      songs: songsCleaned
+      songs: songsCleaned,
+      requestedSongs: requestedSongsCleaned
     };
   }
 }

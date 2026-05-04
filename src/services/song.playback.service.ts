@@ -3,17 +3,19 @@ import path from 'path';
 import { JellyfinServiceInterface } from './jellyfin/jellyfin.interface';
 import { TokenServiceInterface } from './token/token.interface';
 import { FileServiceInterface } from './file/file.interface';
-import { BASE_URL, SONG_DOWNLOAD_DIR } from '../config';
+import { BASE_URL, SONG_DOWNLOAD_DIR, TOKEN_EXPIRY_MINUTES } from '../config';
 import { JellyfinService } from './jellyfin/jellyfin.service';
 import { inject, injectable } from 'tsyringe';
 import { FileService } from './file/file.service';
 import { TokenServiceAdapter } from './token/token.adapter';
+import { RequestedSongsService } from './requested-songs.service';
 
 @injectable()
 export class SongPlaybackService {
   private jellyfinService: JellyfinServiceInterface;
   private tokenService: TokenServiceInterface;
   private fileService: FileServiceInterface;
+  private requestedSongsService: RequestedSongsService;
   private downloadDirectory: string;
 
   constructor(
@@ -21,14 +23,16 @@ export class SongPlaybackService {
     @inject(JellyfinService) jellyfinService: JellyfinService,
     @inject(TokenServiceAdapter) tokenService: TokenServiceAdapter,
     @inject(FileService) fileService: FileService,
+    @inject(RequestedSongsService) requestedSongsService: RequestedSongsService,
   ) {
     this.downloadDirectory = downloadDir;
     this.jellyfinService = jellyfinService;
     this.tokenService = tokenService;
     this.fileService = fileService;
+    this.requestedSongsService = requestedSongsService;
   }
 
-  async publishSong(songId: string): Promise<{token: string, playUrl: string}> {
+  async requestSong(songId: string): Promise<{token: string, playUrl: string}> {
     try {
       // Get song info from Jellyfin
       const songInfo = await this.jellyfinService.getMusicById(songId);
@@ -59,10 +63,14 @@ export class SongPlaybackService {
         }
       }
 
-      const token = this.tokenService.createEphemeralToken({ songId });
+      const { token, expiresAt } = this.tokenService.createEphemeralToken({ songId });
 
       // Return ephemeral token and play URL
       const playUrl = `${BASE_URL}/play/${token}`;
+
+      // Persist the requested song
+      this.requestedSongsService.addRequestedSong(songId, token, playUrl, expiresAt);
+      
       return { token, playUrl };
     } catch (error) {
       throw new Error(`Failed to publish song: ${error instanceof Error ? error.message : 'Unknown error'}`);

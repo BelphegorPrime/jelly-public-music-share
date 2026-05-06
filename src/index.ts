@@ -16,6 +16,7 @@ import searchRouter from './api/search';
 import requestRouter from './api/request';
 import validateRouter from './api/validate';
 import streamRouter from './api/stream';
+import lyricsRouter from './api/lyrics';
 
 import { CleanupService } from './services/cleanup.service';
 import { NODE_ENV, PORT, SONG_DOWNLOAD_DIR, TOKEN_EXPIRY_MINUTES } from './config';
@@ -51,6 +52,7 @@ app.use('/api/search', searchRouter);
 app.use('/api/request', requestRouter);
 app.use('/api/validate', validateRouter);
 app.use('/api/stream', streamRouter);
+app.use('/api/lyrics', lyricsRouter);
 
 app.get('*', authenticate, (_, res) => {
   res.sendFile(path.join(clientPath, 'index.html'));

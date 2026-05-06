@@ -6,8 +6,9 @@ import { Jellyfin, Api } from '@jellyfin/sdk';
 import { getItemsApi } from '@jellyfin/sdk/lib/utils/api/items-api';
 import { getUserApi } from '@jellyfin/sdk/lib/utils/api/user-api';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
+import { getLyricsApi } from '@jellyfin/sdk/lib/utils/api/lyrics-api';
 import { JELLYFIN_URL, JELLYFIN_USERNAME, JELLYFIN_API_KEY } from '../../config';
-import { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
+import { BaseItemDto, LyricDto } from '@jellyfin/sdk/lib/generated-client/models';
 import { Readable } from 'node:stream';
 
 const execPromise = promisify(exec);
@@ -21,6 +22,7 @@ export class JellyfinService {
   private itemsApi: ReturnType<typeof getItemsApi>;
   private userApi: ReturnType<typeof getUserApi>;
   private libraryApi: ReturnType<typeof getLibraryApi>;
+  private lyricsApi: ReturnType<typeof getLyricsApi>;
 
   constructor() {
     this.baseUrl = JELLYFIN_URL;
@@ -44,6 +46,7 @@ export class JellyfinService {
     this.itemsApi = getItemsApi(this.api);
     this.userApi = getUserApi(this.api);
     this.libraryApi = getLibraryApi(this.api);
+    this.lyricsApi = getLyricsApi(this.api);
   }
 
   async getMusicLibrary(ids?: string[]): Promise<Array<BaseItemDto>> {
@@ -147,6 +150,32 @@ export class JellyfinService {
 
     // Transcode to MP3 after download
     await this.transcodeToMP3(downloadLocation, destinationPath);
+  }
+
+  /**
+   * Fetch lyrics for a given item ID
+   * @param itemId The ID of the media item to fetch lyrics for
+   * @returns Object containing lyrics text and format, or null if not found
+   */
+  async getLyrics(itemId: string): Promise<LyricDto | null> {
+    if (!this.baseUrl || !this.apiKey) {
+      return null;
+    }
+
+    try {
+      const { data } = await this.lyricsApi.getLyrics({
+        itemId
+      })
+
+      if (data.Lyrics) {
+        return data;
+      }
+
+      return null;
+    } catch (error) {
+      console.error(`Error fetching lyrics for item ${itemId}:`, error);
+      return null;
+    }
   }
 
   /**

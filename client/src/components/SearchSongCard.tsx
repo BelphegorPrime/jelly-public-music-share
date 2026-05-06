@@ -4,22 +4,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { InputGroupCopyButton } from "@/components/input-group/buttons/input-group-copy-button";
 import type { RequestedSong } from "@/SearchPage";
+import type { SongData } from "@/types";
 import './SearchSongCard.css';
 
 type SearchSongCardProps = {
     token: string,
-    song: SearchResult,
+    song: SongData,
     requestedSongs: RequestedSong[],
     refreshRequestedSongs: () => void,
     showToast: (msg: string) => void
-}
-
-type SearchResult = {
-    id: string,
-    image: string,
-    name: string,
-    artist: string,
-    album?: string
 }
 
 const request = async (token: string, songId: string, showToast: (msg: string) => void): Promise<{ playUrl: string, token: string } | null> => {
@@ -85,11 +78,14 @@ export default function SearchSongCard({
     }, [showToast]);
 
     const handleRequest = useCallback(async () => {
+        if (!song.id) {
+            return
+        }
         if (!data) {
-            setRequestStarted(true);
-            const requestData = await request(token, song.id, showToast);
-            setData(requestData);
-            refreshRequestedSongs();
+                setRequestStarted(true);
+                const requestData = await request(token, song.id, showToast);
+                setData(requestData);
+                refreshRequestedSongs();
         } else {
             copyToClipboard(data.playUrl);
         }

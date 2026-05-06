@@ -36,13 +36,17 @@ export default function AudioPlayer({ token }: { token: string }) {
 
     const className = isBig ? "" : "fixed bottom-0 left-0 right-0 z-50";
     return (
-        <MediaThemeTailwindAudio className={`w-full ${className}`}>
-            <audio
-                slot="media"
-                src={data.url}
-                playsInline
-                crossOrigin="anonymous"
-            />
-        </MediaThemeTailwindAudio>
+        <>
+            <h1 className={isBig ? "" : "hidden"}>Playing Song</h1>
+            <MediaThemeTailwindAudio className={`w-full ${className}`}>
+                <audio
+                    id="audio-player"
+                    slot="media"
+                    src={data.url}
+                    playsInline
+                    crossOrigin="anonymous"
+                />
+            </MediaThemeTailwindAudio>
+        </>
     );
 }

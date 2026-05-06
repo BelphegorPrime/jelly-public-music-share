@@ -4,13 +4,54 @@ import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import PlayPageError from '@/components/PlayPageError';
 import AudioPlayer from './components/AudioPlayer';
+import LyricsDisplay from './components/LyricsDisplay';
+import type { SongData } from './types';
+import PlaySongCard from './components/PlaySongCard';
 
 type PlayPageContent = 'loading' | 'success' | 'error' | 'expired' | 'not-found';
+
+type LyricRow = {
+  Start:  number;
+  Text: string;
+  Cues: Record<string, unknown>[];
+}
+
+export type LyricsData = {
+  lyrics: LyricRow[] | null
+}
+
+const fetchSongData = async (token: string) => {
+  try {
+    const response = await fetch(`/api/songData/${token}`);
+    if (response.ok) {
+      return await response.json();
+    } else {
+      console.log('SongData not available for this song');
+    }
+  } catch (error) {
+    console.error('Error fetching songData:', error);
+  }
+};
+
+const fetchLyrics = async (token: string) => {
+  try {
+    const response = await fetch(`/api/lyrics/${token}`);
+    if (response.ok) {
+      return await response.json();
+    } else {
+      console.log('Lyrics not available for this song');
+    }
+  } catch (error) {
+    console.error('Error fetching lyrics:', error);
+  }
+};
 
 export default function PlayPage() {
   const { token } = useParams<{ token: string }>();
 
   const [renderContent, setRenderContent] = useState<PlayPageContent>(token ? 'loading' : 'error');
+  const [songData, setSongData] = useState<{ itemInfo: SongData | null } | null>(null);
+  const [lyricsData, setLyricsData] = useState<LyricsData | null>(null);
 
   useEffect(() => {
     if (token) {
@@ -19,6 +60,15 @@ export default function PlayPage() {
         .then(data => {
           if (data.valid) {
             setRenderContent('success');
+
+            fetchSongData(token).then(data => {
+              console.log(data)
+              return data
+            }).then(setSongData)
+            fetchLyrics(token).then(data => {
+              console.log(data)
+              return data
+            }).then(setLyricsData);
           } else if (data.expired) {
             setRenderContent('expired');
           } else if (data.notFound) {
@@ -53,8 +103,9 @@ export default function PlayPage() {
 
   return (
     <div className='grid gap-4'>
-      <h1>Playing Song</h1>
+      <PlaySongCard song={songData?.itemInfo || null} />
       <AudioPlayer token={token} />
+      <LyricsDisplay lyricsData={lyricsData} />
     </div>
   );
 }

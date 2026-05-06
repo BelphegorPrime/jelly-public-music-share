@@ -8,7 +8,7 @@ const router = express.Router();
 const jellyfinService = container.resolve(JellyfinService);
 const tokenService = container.resolve(TokenServiceAdapter);
 
-// GET /api/lyrics/:token - Get lyrics for a song using a valid one-time token
+// GET /api/songData/:token - Get lyrics for a song using a valid one-time token
 router.get('/:token', async (req: Request, res: Response) => {
   const { token } = req.params;
 
@@ -26,14 +26,13 @@ router.get('/:token', async (req: Request, res: Response) => {
 
     const { songId } = tokenData;
 
-    // Fetch lyrics from Jellyfin
-    const lyricsData = await jellyfinService.getLyrics(songId);
-
+    const itemInfo = await jellyfinService.getMusicById(songId)
+    
     res.json({
-        lyrics: lyricsData?.lyrics || null,
+        itemInfo: itemInfo ? getSongData(itemInfo) : null 
     });
   } catch (error) {
-    console.error('Error in /api/lyrics/:token route:', error);
+    console.error('Error in /api/songData/:token route:', error);
     res.status(500).json({
       error: 'Failed to fetch lyrics',
       message: error instanceof Error ? error.message : 'Unknown error'

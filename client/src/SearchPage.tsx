@@ -6,16 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import SearchSongCard from './components/SearchSongCard';
-
-type SearchResult = {
-  id: string,
-  artist: string,
-  duration: [number, number],
-  image: string,
-  name: string,
-  type: string
-  album?: string,
-}
+import type { SongData } from './types';
 
 export type RequestedSong = {
   songId: string;
@@ -41,7 +32,7 @@ export default function SearchPage() {
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(false);
   const [requestedSongs, setRequestedSongs] = useState<RequestedSong[]>([]);
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [results, setResults] = useState<SongData[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const { token, user, logout } = useAuth();
   const navigate = useNavigate();

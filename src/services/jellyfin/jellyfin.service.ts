@@ -2,14 +2,14 @@ import fs from 'node:fs';
 import { exec } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
+import { Readable } from 'node:stream';
 import { Jellyfin, Api } from '@jellyfin/sdk';
 import { getItemsApi } from '@jellyfin/sdk/lib/utils/api/items-api';
 import { getUserApi } from '@jellyfin/sdk/lib/utils/api/user-api';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { getLyricsApi } from '@jellyfin/sdk/lib/utils/api/lyrics-api';
+import { BaseItemDto, LyricLine } from '@jellyfin/sdk/lib/generated-client/models';
 import { JELLYFIN_URL, JELLYFIN_USERNAME, JELLYFIN_API_KEY } from '../../config';
-import { BaseItemDto, LyricDto } from '@jellyfin/sdk/lib/generated-client/models';
-import { Readable } from 'node:stream';
 
 const execPromise = promisify(exec);
 
@@ -157,18 +157,16 @@ export class JellyfinService {
    * @param itemId The ID of the media item to fetch lyrics for
    * @returns Object containing lyrics text and format, or null if not found
    */
-  async getLyrics(itemId: string): Promise<LyricDto | null> {
+  async getLyrics(itemId: string): Promise<{ lyrics: LyricLine[] } | null> {
     if (!this.baseUrl || !this.apiKey) {
       return null;
     }
 
     try {
-      const { data } = await this.lyricsApi.getLyrics({
-        itemId
-      })
+      const { data } = await this.lyricsApi.getLyrics({ itemId })
 
       if (data.Lyrics) {
-        return data;
+        return { lyrics: data.Lyrics}
       }
 
       return null;

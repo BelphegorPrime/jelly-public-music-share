@@ -1,6 +1,6 @@
 {
   "name": "jelly-public-music-share",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "A self-hosted music sharing platform for the Reddit r/selfhost community",
   "main": "dist/index.js",
   "scripts": {

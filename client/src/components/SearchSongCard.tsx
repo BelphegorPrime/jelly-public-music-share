@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { InputGroupCopyButton } from "@/components/input-group/buttons/input-group-copy-button";
 import type { RequestedSong } from "@/SearchPage";
+import './SearchSongCard.css';
 
 type SearchSongCardProps = {
     token: string,
@@ -55,7 +56,9 @@ const request = async (token: string, songId: string, showToast: (msg: string) =
 
 const getButtonText = (requestStarted: boolean, requestFinished: boolean): JSX.Element => {
     if (requestStarted && !requestFinished) {
-        return <>Requested</>
+        return <>
+            <span className="jumping-dot">.</span><span className="jumping-dot">.</span><span className="jumping-dot">.</span> Requested
+        </>
     } else if (requestFinished) {
         return <>
             <Copy className='w-4 h-4 mr-2' /> Link Created

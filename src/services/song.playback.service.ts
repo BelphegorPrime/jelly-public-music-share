@@ -1,19 +1,18 @@
 import fs from 'fs';
 import path from 'path';
 import { JellyfinServiceInterface } from './jellyfin/jellyfin.interface';
-import { TokenServiceInterface } from './token/token.interface';
 import { FileServiceInterface } from './file/file.interface';
 import { BASE_URL } from '../config';
 import { JellyfinService } from './jellyfin/jellyfin.service';
 import { inject, injectable } from 'tsyringe';
 import { FileService } from './file/file.service';
-import { TokenServiceAdapter } from './token/token.adapter';
+import { EphemeralTokenService } from './token/ephemeral-token.service';
 import { RequestedSongsService } from './requested-songs.service';
 
 @injectable()
 export class SongPlaybackService {
   private jellyfinService: JellyfinServiceInterface;
-  private tokenService: TokenServiceInterface;
+  private tokenService: EphemeralTokenService;
   private fileService: FileServiceInterface;
   private requestedSongsService: RequestedSongsService;
   private downloadDirectory: string;
@@ -21,7 +20,7 @@ export class SongPlaybackService {
   constructor(
     @inject('SONG_DOWNLOAD_DIR') downloadDir: string,
     @inject(JellyfinService) jellyfinService: JellyfinService,
-    @inject(TokenServiceAdapter) tokenService: TokenServiceAdapter,
+    @inject(EphemeralTokenService) tokenService: EphemeralTokenService,
     @inject(FileService) fileService: FileService,
     @inject(RequestedSongsService) requestedSongsService: RequestedSongsService,
   ) {

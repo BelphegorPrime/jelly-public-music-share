@@ -1,19 +1,22 @@
 import { container } from 'tsyringe';
-import { TokenServiceInterface } from '../services/token/token.interface';
 import { FileServiceInterface } from '../services/file/file.interface';
-import { TokenServiceAdapter } from '../services/token/token.adapter';
 import { FileService } from '../services/file/file.service';
 import { CleanupService } from '../services/cleanup.service';
 import { SongPlaybackService } from '../services/song.playback.service';
 import { RequestedSongsService } from '../services/requested-songs.service';
 import { FileHandlerService } from '../services/file/file.handler.service';
+import { AuthTokenService } from '../services/token/auth-token.service';
+import { EphemeralTokenService } from '../services/token/ephemeral-token.service';
 import { SONG_DOWNLOAD_DIR, TOKEN_USAGE_DATA_FILE, REQUESTED_SONGS_DATA_FILE } from '../config';
 import { JellyfinService } from '../services/jellyfin/jellyfin.service';
 
 // Register interfaces with their implementations
 container.register<JellyfinService>('JellyfinService', { useClass: JellyfinService });
-container.register<TokenServiceInterface>('TokenServiceInterface', { useClass: TokenServiceAdapter });
 container.register<FileServiceInterface>('FileServiceInterface', { useClass: FileService });
+
+// Register singleton token services
+container.registerSingleton(AuthTokenService);
+container.registerSingleton(EphemeralTokenService);
 
 // Register concrete services
 container.register<CleanupService>(CleanupService, { useClass: CleanupService });

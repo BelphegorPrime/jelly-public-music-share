@@ -1,10 +1,12 @@
 import express, { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import { JWT_SECRET, TOKEN_EXPIRY_MINUTES, AUTH_USERNAME, AUTH_PASSWORD } from '../config';
+import { container } from '../di/container';
+import { AuthTokenService } from '../services/token/auth-token.service';
+import { AUTH_USERNAME, AUTH_PASSWORD, TOKEN_EXPIRY_MINUTES } from '../config';
 
 const router = express.Router();
+const authTokenService = container.resolve(AuthTokenService);
 
-export type AuthToken = jwt.JwtPayload & {
+export type AuthToken = {
   userId: string;
   username: string;
   issuedAt: number;
@@ -20,22 +22,17 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 
     // Validate credentials against environment variables
-      if (username !== AUTH_USERNAME || password !== AUTH_PASSWORD) {
+    if (username !== AUTH_USERNAME || password !== AUTH_PASSWORD) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate JWT token
-    const payload: AuthToken = {
+    // Generate auth token using AuthTokenService
+    const { token, expiresAt } = authTokenService.generateToken({
       userId: username, // Can be expanded to a proper user ID later
       username,
-      issuedAt: Date.now(),
-    };
-
-    const token = jwt.sign(payload, JWT_SECRET, {
-      expiresIn: `${TOKEN_EXPIRY_MINUTES}min`,
     });
 
-    res.json({ token, expiresIn: TOKEN_EXPIRY_MINUTES * 60 });
+    res.json({ token, expiresIn: TOKEN_EXPIRY_MINUTES * 60, expiresAt });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -57,7 +54,12 @@ router.get('/verify', (req: Request, res: Response) => {
     }
 
     const token = authHeader.slice(7);
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthToken;
+    const decoded = authTokenService.verifyToken(token);
+
+    if (!decoded) {
+      return res.status(401).json({ valid: false, error: 'Invalid token' });
+    }
+
     res.json({ valid: true, username: decoded.username });
   } catch (error) {
     res.status(401).json({ valid: false, error: 'Invalid token' });

@@ -7,7 +7,10 @@ export const JELLYFIN_API_KEY = process.env.JELLYFIN_API_KEY || '';
 
 export const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
-export const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key';
+// Separate JWT secrets for owner (authentication) and consumer (ephemeral song tokens)
+export const JWT_SECRET_OWNER = process.env.JWT_SECRET_OWNER || process.env.JWT_SECRET || 'default-owner-secret-key';
+export const JWT_SECRET_CONSUMER = process.env.JWT_SECRET_CONSUMER || process.env.JWT_SECRET || 'default-consumer-secret-key';
+
 export const TOKEN_EXPIRY_MINUTES = process.env.TOKEN_EXPIRY_MINUTES ?
   parseInt(process.env.TOKEN_EXPIRY_MINUTES) :
   1440; // 24 hours

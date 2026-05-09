@@ -1,12 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../config';
+import { container } from '../di/container';
+import { AuthTokenService } from '../services/token/auth-token.service';
 
 const whitelistedPaths = ['/play', '/login', '/static', '/favicon.svg', '/.well-known', '/api/auth/login', '/api/health'];
 
+// Get auth token service instance for middleware
+const authTokenService = container.resolve(AuthTokenService);
+
 /**
  * JWT Authentication middleware for protecting endpoints
- * Validates JWT token from Authorization header (Bearer scheme)
+ * Validates owner authentication tokens from Authorization header (Bearer scheme)
  */
 export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -32,24 +35,24 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         // Extract token
         const token = authHeader.slice(7);
 
-        // Verify JWT token
-        try {
-            const decoded = jwt.verify(token, JWT_SECRET) as any;
-            
-            // Attach authenticated user info to request object
-            (req as any).user = { 
-                username: decoded.username,
-                userId: decoded.userId
-            };
+        // Verify owner authentication token
+        const decoded = authTokenService.verifyToken(token);
 
-            next();
-        } catch (error) {
+        if (!decoded) {
             res.status(401).json({ 
                 error: 'Invalid token',
                 message: 'Token is invalid or expired'
             });
             return;
         }
+
+        // Attach authenticated user info to request object
+        (req as any).user = { 
+            username: decoded.username,
+            userId: decoded.userId
+        };
+
+        next();
     } catch (error) {
         console.error('Authentication error:', error);
         res.status(500).json({ 

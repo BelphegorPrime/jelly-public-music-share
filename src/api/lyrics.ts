@@ -1,12 +1,11 @@
 import express, { Request, Response } from 'express';
 import { container } from '../di/container';
 import { JellyfinService } from '../services/jellyfin/jellyfin.service';
-import { TokenServiceAdapter } from '../services/token/token.adapter';
-import { getSongData } from '../utils/getSongData';
+import { EphemeralTokenService } from '../services/token/ephemeral-token.service';
 
 const router = express.Router();
 const jellyfinService = container.resolve(JellyfinService);
-const tokenService = container.resolve(TokenServiceAdapter);
+const ephemeralTokenService = container.resolve(EphemeralTokenService);
 
 // GET /api/lyrics/:token - Get lyrics for a song using a valid one-time token
 router.get('/:token', async (req: Request, res: Response) => {
@@ -18,7 +17,7 @@ router.get('/:token', async (req: Request, res: Response) => {
 
   try {
     // Verify token - it should be valid and not expired
-    const tokenData = tokenService.verifyToken(token);
+    const tokenData = ephemeralTokenService.verifyToken(token);
 
     if (!tokenData) {
       return res.status(401).json({ error: 'Token is invalid or expired' });

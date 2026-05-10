@@ -49,8 +49,8 @@ export class CleanupService {
   /**
    * Clean up expired requested songs
    */
-  cleanupExpiredRequests(): number {
-    return this.requestedSongsService.cleanupExpiredRequests();
+  async cleanupExpiredRequests(): Promise<number> {
+    return await this.requestedSongsService.cleanupExpiredRequests();
   }
 
   /**
@@ -58,7 +58,7 @@ export class CleanupService {
    */
   async cleanup(): Promise<{ songs: number; requestedSongs: number }> {
     const songsCleaned = await this.cleanupSongFiles();
-    const requestedSongsCleaned = this.cleanupExpiredRequests();
+    const requestedSongsCleaned = await this.cleanupExpiredRequests();
 
     console.log(`Cleanup completed: ${songsCleaned} song files removed, ${requestedSongsCleaned} expired requests removed`);
 

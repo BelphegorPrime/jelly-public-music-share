@@ -13,11 +13,13 @@ services:
       - JELLYFIN_URL=${JELLYFIN_URL}
       - JELLYFIN_USERNAME=${JELLYFIN_USERNAME}
       - JELLYFIN_API_KEY=${JELLYFIN_API_KEY}
+      - BASE_URL=${BASE_URL:-http://localhost:3000}
       - AUTH_USERNAME=${AUTH_USERNAME}
       - AUTH_PASSWORD=${AUTH_PASSWORD}
       - TOKEN_USAGE_LIMIT=${TOKEN_USAGE_LIMIT}
+      - NODE_ENV=development
     volumes:
-      - downloads:/data
+      - ~/jellyPublicMusicShare:/data
       # optinal tmp volume
       #- tmp:/tmp
     restart: unless-stopped
@@ -26,7 +28,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    stop_grace_period: 30s
 
 volumes:
-  downloads:
+  data:
   #tmp:

@@ -30,9 +30,9 @@ router.post('/', authenticate, async (req: Request, res: Response) => {
 });
 
 // GET /api/request - Get all currently requested songs
-router.get('/', authenticate, (req: Request, res: Response) => {
+router.get('/', authenticate, async (req: Request, res: Response) => {
   try {
-    const requestedSongs = requestedSongsService.getCurrentRequests();
+    const requestedSongs = await requestedSongsService.getCurrentRequests();
     res.json(requestedSongs);
   } catch (error) {
     res.status(500).json({

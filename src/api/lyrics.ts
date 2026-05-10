@@ -17,7 +17,7 @@ router.get('/:token', async (req: Request, res: Response) => {
 
   try {
     // Verify token - it should be valid and not expired
-    const tokenData = ephemeralTokenService.verifyToken(token);
+    const tokenData = await ephemeralTokenService.verifyToken(token);
 
     if (!tokenData) {
       return res.status(401).json({ error: 'Token is invalid or expired' });

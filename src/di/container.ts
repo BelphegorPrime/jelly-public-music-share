@@ -9,7 +9,9 @@ import { AuthTokenService } from '../services/token/auth-token.service';
 import { EphemeralTokenService } from '../services/token/ephemeral-token.service';
 import { SONG_DOWNLOAD_DIR, TOKEN_USAGE_DATA_FILE, REQUESTED_SONGS_DATA_FILE } from '../config';
 import { JellyfinService } from '../services/jellyfin/jellyfin.service';
-import { DatabaseService } from '../database/database.service';
+import { DatabaseService } from '../db/database.service';
+import { RequestedSongsRepository } from '../db/repositories/requested-songs.repository';
+import { EphemeralTokensRepository } from '../db/repositories/ephemeral-tokens.repository';
 
 // Register interfaces with their implementations
 container.register<JellyfinService>('JellyfinService', { useClass: JellyfinService });
@@ -19,6 +21,10 @@ container.register<FileServiceInterface>('FileServiceInterface', { useClass: Fil
 container.registerSingleton(AuthTokenService);
 container.registerSingleton(EphemeralTokenService);
 container.registerSingleton(DatabaseService);
+
+// Register database repositories as singletons
+container.registerSingleton(RequestedSongsRepository);
+container.registerSingleton(EphemeralTokensRepository);
 
 // Register concrete services
 container.register<CleanupService>(CleanupService, { useClass: CleanupService });

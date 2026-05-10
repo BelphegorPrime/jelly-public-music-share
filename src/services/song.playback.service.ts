@@ -68,7 +68,7 @@ export class SongPlaybackService {
       const playUrl = `${BASE_URL}/play/${token}`;
 
       // Persist the requested song
-      this.requestedSongsService.addRequestedSong(songId, token, playUrl, expiresAt);
+      await this.requestedSongsService.addRequestedSong(songId, token, playUrl, expiresAt);
       
       return { token, playUrl };
     } catch (error) {
@@ -79,7 +79,8 @@ export class SongPlaybackService {
   async playSong(token: string, consume = false): Promise<{filePath: string} | null> {
     try {
       // Verify token (will return null if expired or blacklisted)
-      const tokenData = consume ? this.tokenService.verifyAndConsumeToken(token) : this.tokenService.verifyToken(token) ;
+      const tokenDataPromise = consume ? this.tokenService.verifyAndConsumeToken(token) : this.tokenService.verifyToken(token) ;
+      const tokenData = await tokenDataPromise;
       if (!tokenData) {
         return null;
       }

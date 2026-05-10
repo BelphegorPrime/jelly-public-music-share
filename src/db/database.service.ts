@@ -120,33 +120,53 @@ export class DatabaseService {
             const deletedCount = this.transaction((tx) => {
                 let deleted = 0;
 
-                const ephemeralResult = tx.run(sql`
-          DELETE FROM ephemeral_tokens
-          WHERE expires_at < ${now}
-        `);
+                try {
+                    const ephemeralResult = tx.run(sql`
+           DELETE FROM ephemeral_token_usage
+           WHERE expires_at < ${now}
+         `);
 
-                deleted += ephemeralResult.changes;
+                    deleted += ephemeralResult.changes;
+                } catch (error) {
+                    // Tables may not exist yet, ignore if this is a fresh DB
+                    if ((error as any)?.message?.includes('no such table')) {
+                        console.log('WARNING: ephemeral_token_usage table does not exist yet');
+                    } else {
+                        throw error;
+                    }
+                }
 
-                const requestedSongsResult = tx.run(sql`
+                try {
+                    const requestedSongsResult = tx.run(sql`
           DELETE FROM requested_songs
           WHERE expires_at < ${now}
         `);
 
-                deleted += requestedSongsResult.changes;
+                    deleted += requestedSongsResult.changes;
+                } catch (error) {
+                    // Tables may not exist yet, ignore if this is a fresh DB
+                    if ((error as any)?.message?.includes('no such table')) {
+                        console.log('WARNING: requested_songs table does not exist yet');
+                    } else {
+                        throw error;
+                    }
+                }
 
-                const authResult = tx.run(sql`
+                try {
+                    const authResult = tx.run(sql`
           DELETE FROM auth_tokens
           WHERE expires_at < ${now}
         `);
 
-                deleted += authResult.changes;
-
-                const tokenUsageResult = tx.run(sql`
-          DELETE FROM token_usage
-          WHERE expires_at < ${now}
-        `);
-
-                deleted += tokenUsageResult.changes;
+                    deleted += authResult.changes;
+                } catch (error) {
+                    // Tables may not exist yet, ignore if this is a fresh DB
+                    if ((error as any)?.message?.includes('no such table')) {
+                        console.log('WARNING: auth_tokens table does not exist yet');
+                    } else {
+                        throw error;
+                    }
+                }
 
                 return deleted;
             });
@@ -159,8 +179,7 @@ export class DatabaseService {
 
             return deletedCount;
         } catch (error) {
-            console.error('Database cleanup failed', error);
-
+            console.error('Database cleanup failed with unexpected error', error);
             return 0;
         }
     }
@@ -250,6 +269,7 @@ export class DatabaseService {
             };
         }
     }
+
 
     /**
      * Gracefully close database

@@ -9,6 +9,9 @@ import helmet from 'helmet';
 // DI Container
 import { container } from './di/container';
 
+// Database
+import { initializeDatabase } from './db/init';
+
 // API Routes
 import healthRouter from './api/health';
 import authRouter from './api/auth';
@@ -75,11 +78,22 @@ export default app;
 
 // Start server if not in test environment
 if (NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  (async () => {
+    try {
+      // Initialize database first
+      await initializeDatabase();
 
-    // Run cleanup immediately on startup to clean up any lingering files
-    cleanupService.cleanup()
-      .catch(error => console.error('Initial cleanup failed:', error));
-  });
+      // Start server
+      app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+
+        // Run cleanup immediately on startup to clean up any lingering files
+        cleanupService.cleanup()
+          .catch(error => console.error('Initial cleanup failed:', error));
+      });
+    } catch (error) {
+      console.error('Failed to start server:', error);
+      process.exit(1);
+    }
+  })();
 }

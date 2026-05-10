@@ -1,9 +1,8 @@
-import { singleton } from 'tsyringe';
+import { singleton, inject } from 'tsyringe';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs';
-import path from 'path';
-import { JWT_SECRET_CONSUMER, TOKEN_EXPIRY_MINUTES, TOKEN_USAGE_DATA_FILE, TOKEN_USAGE_LIMIT } from '../../config';
+import { EphemeralTokensRepository } from '../../db/repositories/ephemeral-tokens.repository';
+import { JWT_SECRET_CONSUMER, TOKEN_EXPIRY_MINUTES, TOKEN_USAGE_LIMIT } from '../../config';
 
 export type EphemeralTokenPayload = jwt.JwtPayload & {
   tokenId: string;
@@ -11,10 +10,6 @@ export type EphemeralTokenPayload = jwt.JwtPayload & {
   expiresAt: number;
 };
 
-export interface TokenUsageData {
-  usageCounts: Record<string, number>;
-  blacklistedTokens: string[];
-}
 
 /**
  * EphemeralTokenService handles generation and verification of consumer ephemeral tokens
@@ -23,72 +18,61 @@ export interface TokenUsageData {
  */
 @singleton()
 export class EphemeralTokenService {
-  private blacklistedTokens: Set<string>;
-  private usageCounts: Map<string, number>; // Track usage count per token ID
   private secret: string = JWT_SECRET_CONSUMER;
   private expiryMinutes: number = TOKEN_EXPIRY_MINUTES;
   private usageLimit: number = TOKEN_USAGE_LIMIT;
-  private dataFilePath: string = TOKEN_USAGE_DATA_FILE;
 
-  constructor() {
-    this.blacklistedTokens = new Set<string>();
-    this.usageCounts = new Map<string, number>();
-
-    // Load persisted data on initialization
-    this.loadUsageData();
-  }
+  constructor(
+    @inject(EphemeralTokensRepository) private ephemeralTokensRepository: EphemeralTokensRepository
+  ) {}
 
   /**
-   * Load usage data from file
+   * Create or update a token usage record in database
    */
-  private loadUsageData(): void {
+  private async createOrUpdateTokenUsage(tokenId: string, usageCount: number, blacklisted: boolean, expiresAt: number): Promise<void> {
     try {
-      if (fs.existsSync(this.dataFilePath)) {
-        const data = fs.readFileSync(this.dataFilePath, 'utf-8');
-        const parsed: TokenUsageData = JSON.parse(data);
-
-        // Restore usage counts
-        this.usageCounts = new Map(Object.entries(parsed.usageCounts));
-
-        // Restore blacklisted tokens
-        this.blacklistedTokens = new Set(parsed.blacklistedTokens);
-
-        console.log(`Loaded ephemeral token usage data from ${this.dataFilePath}`);
-        console.log(
-          `Restored ${this.usageCounts.size} token usage records and ${this.blacklistedTokens.size} blacklisted tokens`
-        );
-      } else {
-        console.log(
-          `Ephemeral token usage file does not exist yet: ${this.dataFilePath}`
-        );
-      }
+      const tokenEntity = {
+        tokenId,
+        usageCount,
+        blacklisted,
+        createdAt: Date.now(),
+        expiresAt
+      };
+      
+      await this.ephemeralTokensRepository.createOrUpdate(tokenEntity);
     } catch (error) {
-      console.error(`Error loading ephemeral token usage data: ${error}`);
-      // Continue with empty state if loading fails
+      console.error(`Error creating/updating token usage: ${error}`);
+      throw error;
     }
   }
 
   /**
-   * Save usage data to file
+   * Get token usage record from database
    */
-  private saveUsageData(): void {
+  private async getTokenUsage(tokenId: string): Promise<{usageCount: number, blacklisted: boolean} | null> {
     try {
-      const dataDir = path.dirname(this.dataFilePath);
-
-      // Create data directory if it doesn't exist
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-      }
-
-      const data: TokenUsageData = {
-        usageCounts: Object.fromEntries(this.usageCounts),
-        blacklistedTokens: Array.from(this.blacklistedTokens),
+      const token = await this.ephemeralTokensRepository.getToken(tokenId);
+      if (!token) return null;
+      
+      return {
+        usageCount: token.usageCount,
+        blacklisted: token.blacklisted
       };
-
-      fs.writeFileSync(this.dataFilePath, JSON.stringify(data, null, 2), 'utf-8');
-      console.log(`Saved ephemeral token usage data to ${this.dataFilePath}`);
     } catch (error) {
-      console.error(`Error saving ephemeral token usage data: ${error}`);
+      console.error(`Error getting token usage: ${error}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Blacklist a token in database
+   */
+  private async blacklistTokenInDb(tokenId: string): Promise<void> {
+    try {
+      await this.ephemeralTokensRepository.blacklistToken(tokenId);
+    } catch (error) {
+      console.error(`Error blacklisting token in database: ${error}`);
+      throw error;
     }
   }
 
@@ -121,7 +105,7 @@ export class EphemeralTokenService {
   /**
    * Verify an ephemeral token (returns null if expired or blacklisted)
    */
-  verifyToken(token: string): EphemeralTokenPayload | null {
+  async verifyToken(token: string): Promise<EphemeralTokenPayload | null> {
     try {
       const decoded = jwt.verify(token, this.secret) as EphemeralTokenPayload;
       console.log(`Decoded ephemeral token: ${JSON.stringify(decoded)}`);
@@ -130,8 +114,10 @@ export class EphemeralTokenService {
         return null;
       }
 
-      // Check if token has been blacklisted
-      if (this.blacklistedTokens.has(decoded.tokenId)) {
+      // Check if token has been blacklisted in database
+      // We'll delegate this check to isTokenBlacklisted method
+      const isBlacklisted = await this.isTokenBlacklisted(decoded.tokenId)
+      if (isBlacklisted) {
         return null;
       }
 
@@ -145,21 +131,33 @@ export class EphemeralTokenService {
   /**
    * Verify and consume an ephemeral token (tracks usage and enforces limits)
    */
-  verifyAndConsumeToken(token: string): EphemeralTokenPayload | null {
+  async verifyAndConsumeToken(token: string): Promise<EphemeralTokenPayload | null> {
     // Reuse verifyToken logic to avoid code duplication
-    const verifiedToken = this.verifyToken(token);
+    const verifiedToken = await this.verifyToken(token);
 
     // If token is invalid/expired/blacklisted, return null
     if (!verifiedToken) {
       return null;
     }
 
-    // Get current usage count for this token
-    const currentUsage = this.usageCounts.get(verifiedToken.tokenId) || 0;
+    // Get current usage count for this token from database
+    const tokenUsage = await this.getTokenUsage(verifiedToken.tokenId);
+    
+    let currentUsage = 0;
+    let blacklisted = false;
+    
+    if (tokenUsage) {
+      currentUsage = tokenUsage.usageCount;
+      blacklisted = tokenUsage.blacklisted;
+    }
+
+    // If token already blacklisted, reject
+    if (blacklisted) {
+      return null;
+    }
 
     // Increment usage count
     const newUsage = currentUsage + 1;
-    this.usageCounts.set(verifiedToken.tokenId, newUsage);
 
     console.log(
       `Ephemeral token ${verifiedToken.tokenId} usage: ${newUsage}/${this.usageLimit}`
@@ -167,32 +165,34 @@ export class EphemeralTokenService {
 
     // Check if usage limit has been reached
     if (newUsage <= this.usageLimit) {
-      // Save usage data after incrementing
-      this.saveUsageData();
-      // Return the token data (without updating usage in JWT as that's not possible)
+      // Update usage count in database
+      await this.createOrUpdateTokenUsage(verifiedToken.tokenId, newUsage, false, verifiedToken.expiresAt);
+      // Return the token data
       return verifiedToken;
     }
 
     // Blacklist token if usage limit is exceeded
-    this.blacklistedTokens.add(verifiedToken.tokenId);
-    // Save usage data after blacklisting
-    this.saveUsageData();
+    await this.blacklistTokenInDb(verifiedToken.tokenId);
     return null; // Return null to indicate token consumption and blacklisting
   }
 
   /**
    * Blacklist an ephemeral token
    */
-  blacklistToken(tokenId: string): void {
-    this.blacklistedTokens.add(tokenId);
-    this.saveUsageData();
+  async blacklistToken(tokenId: string): Promise<void> {
+    await this.blacklistTokenInDb(tokenId);
   }
 
   /**
    * Check if an ephemeral token is blacklisted
    */
-  isTokenBlacklisted(tokenId: string): boolean {
-    return this.blacklistedTokens.has(tokenId);
+  async isTokenBlacklisted(tokenId: string): Promise<boolean> {
+    try {
+      return await this.ephemeralTokensRepository.isBlacklisted(tokenId);
+    } catch (error) {
+      console.error(`Error checking if token is blacklisted: ${error}`);
+      throw error;
+    }
   }
 
   /**
@@ -208,23 +208,35 @@ export class EphemeralTokenService {
   /**
    * Clear blacklisted tokens (optional cleanup)
    */
-  clearBlacklistedTokens(): void {
-    this.blacklistedTokens.clear();
-    this.saveUsageData();
+  async clearBlacklistedTokens(): Promise<void> {
+    // With DB, we don't need to clear, all data should be maintained in DB
+    // Just log this action
+    console.log("clearBlacklistedTokens called - no-op in DB mode");
   }
 
   /**
    * Reset usage count for a token (for testing or special cases)
    */
-  resetTokenUsage(tokenId: string): void {
-    this.usageCounts.delete(tokenId);
-    this.saveUsageData();
+  async resetTokenUsage(tokenId: string): Promise<void> {
+    try {
+      // Delete the token record from database
+      await this.ephemeralTokensRepository.deleteToken(tokenId);
+    } catch (error) {
+      console.error(`Error resetting token usage: ${error}`);
+      throw error;
+    }
   }
 
   /**
    * Get current usage count for an ephemeral token
    */
-  getTokenUsage(tokenId: string): number {
-    return this.usageCounts.get(tokenId) || 0;
+  async getTokenUsageFromDb(tokenId: string): Promise<number> {
+    try {
+      const token = await this.ephemeralTokensRepository.getToken(tokenId);
+      return token ? token.usageCount : 0;
+    } catch (error) {
+      console.error(`Error getting token usage from DB: ${error}`);
+      throw error;
+    }
   }
 }

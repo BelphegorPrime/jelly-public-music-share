@@ -22,7 +22,13 @@ const fetchRequestedSongs = async (token: string, callback: (requestedSongs: Req
       'Authorization': `Bearer ${token}`
     }
   })
-    .then(res => res.json())
+    .then(async (res) => {
+      if (!res.ok) {
+        throw new Error(await res.text());
+      }
+
+      return res.json()
+    })
     .then(data => {
       callback(data || []);
     })

@@ -19,7 +19,7 @@ services:
       - TOKEN_USAGE_LIMIT=${TOKEN_USAGE_LIMIT}
       - NODE_ENV=development
     volumes:
-      - ~/jellyPublicMusicShare:/data
+      - ./data:/data
       # optinal tmp volume
       #- tmp:/tmp
     restart: unless-stopped
@@ -30,6 +30,6 @@ services:
       retries: 3
     stop_grace_period: 30s
 
-volumes:
-  data:
-  #tmp:
+# volumes:
+  # data:
+  # tmp:

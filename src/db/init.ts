@@ -1,6 +1,5 @@
 import { container } from '../di/container';
 import { DatabaseService } from './database.service';
-import { runMigrations } from './migrate';
 
 /**
  * Initialize the database
@@ -19,14 +18,6 @@ export async function initializeDatabase(): Promise<void> {
     const dbService = container.resolve(DatabaseService);
 
     console.log('✓ Database connection established');
-
-    // Run migrations from JSON files to SQLite
-    try {
-      await runMigrations();
-    } catch (error) {
-      console.warn('⚠ Migration failed (non-blocking):', error instanceof Error ? error.message : error);
-      console.log('  Continuing with fresh database...');
-    }
 
     // Ensure all required tables are created
     try {

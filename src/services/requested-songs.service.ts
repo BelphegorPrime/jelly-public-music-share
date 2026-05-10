@@ -1,6 +1,5 @@
 import { injectable, inject } from 'tsyringe';
 import { RequestedSongsRepository } from '../db/repositories/requested-songs.repository';
-import { REQUESTED_SONGS_DATA_FILE } from '../config';
 
 export interface RequestedSong {
   songId: string;

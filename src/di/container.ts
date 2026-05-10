@@ -7,7 +7,7 @@ import { RequestedSongsService } from '../services/requested-songs.service';
 import { FileHandlerService } from '../services/file/file.handler.service';
 import { AuthTokenService } from '../services/token/auth-token.service';
 import { EphemeralTokenService } from '../services/token/ephemeral-token.service';
-import { SONG_DOWNLOAD_DIR, TOKEN_USAGE_DATA_FILE, REQUESTED_SONGS_DATA_FILE } from '../config';
+import { SONG_DOWNLOAD_DIR } from '../config';
 import { JellyfinService } from '../services/jellyfin/jellyfin.service';
 import { DatabaseService } from '../db/database.service';
 import { RequestedSongsRepository } from '../db/repositories/requested-songs.repository';
@@ -35,12 +35,6 @@ container.register<RequestedSongsService>(RequestedSongsService, { useClass: Req
 // Register configuration values
 container.register('SONG_DOWNLOAD_DIR', {
   useValue: SONG_DOWNLOAD_DIR
-});
-container.register('TOKEN_USAGE_DATA_FILE', {
-  useValue: TOKEN_USAGE_DATA_FILE
-});
-container.register('REQUESTED_SONGS_DATA_FILE', {
-  useValue: REQUESTED_SONGS_DATA_FILE
 });
 
 // Register the cleanup service and requested songs service as singletons so there's only one instance that gets used globally

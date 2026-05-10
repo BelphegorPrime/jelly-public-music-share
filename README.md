@@ -1,24 +1,27 @@
 # Jelly Public Music Share
 
-[![Under Construction](https://img.shields.io/badge/Status-Under%20Construction-red)](https://github.com/BelphegorPrime/jelly-public-music-share)
+[![Under Construction](https://img.shields.io/badge/Status-Stable-green)](https://github.com/BelphegorPrime/jelly-public-music-share)
 
-A self-hosted music sharing platform.
+A self-hosted music sharing platform that allows you to share individual songs from your Jellyfin library with others through secure, one-time use links.
 
 ## Why I created this project
 
 I use Jellyfin for my personal music library and wanted an easy way to share rare tracks that are not available on Spotify or YouTube.
 
-Creating full Jellyfin accounts just to send someone a single song felt unnecessary, so I built a small server that searches my library and generates shareable links on demand.
+Creating full Jellyfin accounts just to send someone a single song felt unnecessary, so I built a small server that searches my library and generates secure, shareable links on demand.
 
 To keep it private and simple, links are intended to be one-time usable. Each link is backed by a JWT token, and the audio is streamed through a protected endpoint when opened.
 
 ## Features
 
-- Public music sharing
+- Secure music sharing from Jellyfin libraries
 - Self-hosted deployment
 - Docker container support
 - Docker Compose support
 - Pre-built container on GHCR.io
+- One-time use tokens for enhanced security
+- Built-in authentication system
+- Client-side streaming interface
 
 ## Getting Started
 
@@ -46,9 +49,14 @@ docker compose up -d
 
 #### Prerequisites
 
+- Docker (recommended)
+
+OR
+
 - Node.js (v24+)
 - npm
-- Docker (for container deployment)
+- FFmpeg (for audio transcoding)
+- SQLite (for database storage)
 
 #### Installation
 
@@ -57,12 +65,22 @@ docker compose up -d
 3. Build the project: `npm run build`
 4. Start the server: `npm start`
 
+#### Development
+
+To run in development mode:
+```bash
+npm run dev
+```
+
 ### Docker Deployment
 
+For local Docker deployment:
 ```bash
 docker build -t jelly-public-music-share .
 docker run -p 3000:3000 jelly-public-music-share
 ```
+
+The application will be available at `http://localhost:3000`
 
 ## Development
 
@@ -76,6 +94,21 @@ npm run dev
 
 ```bash
 npm run build
+```
+
+### Database Management
+
+The application uses SQLite with Drizzle ORM. Useful commands:
+
+```bash
+# Generate migrations
+npm run db:generate
+
+# Apply migrations
+npm run db:migrate
+
+# Push schema changes
+npm run db:push
 ```
 
 ## License

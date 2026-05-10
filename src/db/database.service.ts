@@ -9,6 +9,8 @@ import path from 'path';
 import * as schema from './schema';
 import { DATA_DIR } from '../config';
 
+type TablesMetadataRow = { name: string }
+
 /**
  * DatabaseService
  *
@@ -75,6 +77,20 @@ export class DatabaseService {
         console.log('SQLite pragmas configured');
     }
 
+    private getAllTables() {
+        const query = `
+SELECT name
+FROM sqlite_master
+WHERE type = 'table'
+AND name NOT LIKE 'sqlite_%'
+`
+        const tables = this.sqlite
+            .prepare(query)
+            .all() as TablesMetadataRow[];
+
+        return tables
+    }
+
     /**
      * Ensure database tables exist
      * This function creates tables if they don't already exist
@@ -82,14 +98,7 @@ export class DatabaseService {
     private ensureTablesExist(): void {
         try {
             // Check if any tables exist
-            const tables = this.sqlite
-                .prepare(`
-                    SELECT name
-                    FROM sqlite_master
-                    WHERE type = 'table'
-                    AND name NOT LIKE 'sqlite_%'
-                `)
-                .all() as Array<{ name: string }>;
+            const tables = this.getAllTables()
 
             if (tables.length === 0) {
                 console.log('No existing tables found, creating tables from schema...');
@@ -103,35 +112,10 @@ export class DatabaseService {
                 // This is a temporary solution until we properly handle schema creation
                 try {
                     // Create requested_songs table if it doesn't exist
-                    this.sqlite.exec(`
-                        CREATE TABLE IF NOT EXISTS requested_songs (
-                            token TEXT PRIMARY KEY,
-                            song_id TEXT NOT NULL,
-                            play_url TEXT NOT NULL,
-                            requested_at INTEGER NOT NULL,
-                            expires_at INTEGER NOT NULL
-                        )
-                    `);
+                    this.sqlite.exec(schema.createRequestSongsTableQuery);
                     
                     // Create ephemeral_token_usage table if it doesn't exist
-                    this.sqlite.exec(`
-                        CREATE TABLE IF NOT EXISTS ephemeral_token_usage (
-                            token_id TEXT PRIMARY KEY,
-                            usage_count INTEGER NOT NULL DEFAULT 0,
-                            blacklisted INTEGER NOT NULL DEFAULT 0,
-                            created_at INTEGER NOT NULL,
-                            expires_at INTEGER NOT NULL
-                        )
-                    `);
-                    
-                    // Create auth_tokens table if it doesn't exist
-                    this.sqlite.exec(`
-                        CREATE TABLE IF NOT EXISTS auth_tokens (
-                            token TEXT PRIMARY KEY,
-                            expires_at INTEGER NOT NULL,
-                            created_at INTEGER NOT NULL
-                        )
-                    `);
+                    this.sqlite.exec(schema.createEphemeralTokenUsageTableQuery);
                     
                     console.log('✅ Tables created successfully or already exist');
                 } catch (error) {
@@ -220,22 +204,6 @@ export class DatabaseService {
                     }
                 }
 
-                try {
-                    const authResult = tx.run(sql`
-           DELETE FROM auth_tokens
-           WHERE expires_at < ${now}
-         `);
-
-                    deleted += authResult.changes;
-                } catch (error) {
-                    // Tables may not exist yet, ignore if this is a fresh DB
-                    if ((error as any)?.message?.includes('no such table')) {
-                        console.log('WARNING: auth_tokens table does not exist yet');
-                    } else {
-                        throw error;
-                    }
-                }
-
                 return deleted;
             });
 
@@ -303,14 +271,7 @@ export class DatabaseService {
         tables: string[];
     } {
         try {
-            const tables = this.sqlite
-                .prepare(`
-          SELECT name
-          FROM sqlite_master
-          WHERE type = 'table'
-          AND name NOT LIKE 'sqlite_%'
-        `)
-                .all() as Array<{ name: string }>;
+            const tables = this.getAllTables()
 
             const dbStats = fs.statSync(this.dbPath);
 

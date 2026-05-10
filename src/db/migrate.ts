@@ -143,6 +143,9 @@ async function migrateTokenUsage() {
   }
 }
 
+/**
+ * @deprecated starting version 0.2.0
+ */
 export async function runMigrations(): Promise<void> {
   console.log('\n=== Database Migrations ===\n');
 

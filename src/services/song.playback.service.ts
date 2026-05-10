@@ -12,7 +12,7 @@ import { RequestedSongsService } from './requested-songs.service';
 @injectable()
 export class SongPlaybackService {
   private jellyfinService: JellyfinServiceInterface;
-  private tokenService: EphemeralTokenService;
+  private ephemeralTokenService: EphemeralTokenService;
   private fileService: FileServiceInterface;
   private requestedSongsService: RequestedSongsService;
   private downloadDirectory: string;
@@ -20,13 +20,13 @@ export class SongPlaybackService {
   constructor(
     @inject('SONG_DOWNLOAD_DIR') downloadDir: string,
     @inject(JellyfinService) jellyfinService: JellyfinService,
-    @inject(EphemeralTokenService) tokenService: EphemeralTokenService,
+    @inject(EphemeralTokenService) ephemeralTokenService: EphemeralTokenService,
     @inject(FileService) fileService: FileService,
     @inject(RequestedSongsService) requestedSongsService: RequestedSongsService,
   ) {
     this.downloadDirectory = downloadDir;
     this.jellyfinService = jellyfinService;
-    this.tokenService = tokenService;
+    this.ephemeralTokenService = ephemeralTokenService;
     this.fileService = fileService;
     this.requestedSongsService = requestedSongsService;
   }
@@ -62,7 +62,7 @@ export class SongPlaybackService {
         }
       }
 
-      const { token, expiresAt } = this.tokenService.createEphemeralToken({ songId });
+      const { token, expiresAt } = this.ephemeralTokenService.createEphemeralToken({ songId });
 
       // Return ephemeral token and play URL
       const playUrl = `${BASE_URL}/play/${token}`;
@@ -79,7 +79,7 @@ export class SongPlaybackService {
   async playSong(token: string, consume = false): Promise<{filePath: string} | null> {
     try {
       // Verify token (will return null if expired or blacklisted)
-      const tokenDataPromise = consume ? this.tokenService.verifyAndConsumeToken(token) : this.tokenService.verifyToken(token) ;
+      const tokenDataPromise = consume ? this.ephemeralTokenService.verifyAndConsumeToken(token) : this.ephemeralTokenService.verifyToken(token) ;
       const tokenData = await tokenDataPromise;
       if (!tokenData) {
         return null;

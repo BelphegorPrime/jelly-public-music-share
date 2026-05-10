@@ -31,13 +31,7 @@ export class DatabaseService {
     private readonly dbPath: string;
 
     constructor() {
-        const dataDir = DATA_DIR || '/data';
-
-        fs.mkdirSync(dataDir, {
-            recursive: true,
-        });
-
-        this.dbPath = path.join(dataDir, 'app.sqlite');
+        this.dbPath = `${DATA_DIR}/app.sqlite`;
 
         this.sqlite = new Database(this.dbPath, {
             fileMustExist: false,
@@ -53,6 +47,9 @@ export class DatabaseService {
         this.drizzleDb = drizzle(this.sqlite, {
             schema,
         });
+
+        // Ensure tables are created
+        this.ensureTablesExist();
 
         console.log(`Database initialized: ${this.dbPath}`);
     }
@@ -76,6 +73,77 @@ export class DatabaseService {
         this.sqlite.pragma('cache_size = -32000');
 
         console.log('SQLite pragmas configured');
+    }
+
+    /**
+     * Ensure database tables exist
+     * This function creates tables if they don't already exist
+     */
+    private ensureTablesExist(): void {
+        try {
+            // Check if any tables exist
+            const tables = this.sqlite
+                .prepare(`
+                    SELECT name
+                    FROM sqlite_master
+                    WHERE type = 'table'
+                    AND name NOT LIKE 'sqlite_%'
+                `)
+                .all() as Array<{ name: string }>;
+
+            if (tables.length === 0) {
+                console.log('No existing tables found, creating tables from schema...');
+
+                // Create tables by querying schema - Drizzle doesn't automatically create tables,
+                // but we can use direct SQL to create tables if they don't exist
+                // Note: This is a workaround. The proper approach is to use drizzle-kit to generate
+                // migrations or use a schema creation utility.
+                
+                // Manually run CREATE statements for tables that would be generated from schema
+                // This is a temporary solution until we properly handle schema creation
+                try {
+                    // Create requested_songs table if it doesn't exist
+                    this.sqlite.exec(`
+                        CREATE TABLE IF NOT EXISTS requested_songs (
+                            token TEXT PRIMARY KEY,
+                            song_id TEXT NOT NULL,
+                            play_url TEXT NOT NULL,
+                            requested_at INTEGER NOT NULL,
+                            expires_at INTEGER NOT NULL
+                        )
+                    `);
+                    
+                    // Create ephemeral_token_usage table if it doesn't exist
+                    this.sqlite.exec(`
+                        CREATE TABLE IF NOT EXISTS ephemeral_token_usage (
+                            token_id TEXT PRIMARY KEY,
+                            usage_count INTEGER NOT NULL DEFAULT 0,
+                            blacklisted INTEGER NOT NULL DEFAULT 0,
+                            created_at INTEGER NOT NULL,
+                            expires_at INTEGER NOT NULL
+                        )
+                    `);
+                    
+                    // Create auth_tokens table if it doesn't exist
+                    this.sqlite.exec(`
+                        CREATE TABLE IF NOT EXISTS auth_tokens (
+                            token TEXT PRIMARY KEY,
+                            expires_at INTEGER NOT NULL,
+                            created_at INTEGER NOT NULL
+                        )
+                    `);
+                    
+                    console.log('✅ Tables created successfully or already exist');
+                } catch (error) {
+                    console.error('Error creating tables manually:', error);
+                    throw error;
+                }
+            } else {
+                console.log(`Tables already exist: ${tables.map(t => t.name).join(', ')}`);
+            }
+        } catch (error) {
+            console.error('Error checking/creating tables:', error);
+        }
     }
 
     /**
@@ -122,9 +190,9 @@ export class DatabaseService {
 
                 try {
                     const ephemeralResult = tx.run(sql`
-           DELETE FROM ephemeral_token_usage
-           WHERE expires_at < ${now}
-         `);
+            DELETE FROM ephemeral_token_usage
+            WHERE expires_at < ${now}
+          `);
 
                     deleted += ephemeralResult.changes;
                 } catch (error) {
@@ -138,9 +206,9 @@ export class DatabaseService {
 
                 try {
                     const requestedSongsResult = tx.run(sql`
-          DELETE FROM requested_songs
-          WHERE expires_at < ${now}
-        `);
+           DELETE FROM requested_songs
+           WHERE expires_at < ${now}
+         `);
 
                     deleted += requestedSongsResult.changes;
                 } catch (error) {
@@ -154,9 +222,9 @@ export class DatabaseService {
 
                 try {
                     const authResult = tx.run(sql`
-          DELETE FROM auth_tokens
-          WHERE expires_at < ${now}
-        `);
+           DELETE FROM auth_tokens
+           WHERE expires_at < ${now}
+         `);
 
                     deleted += authResult.changes;
                 } catch (error) {

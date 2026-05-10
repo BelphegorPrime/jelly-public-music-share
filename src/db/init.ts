@@ -7,7 +7,7 @@ import { runMigrations } from './migrate';
  *
  * Steps:
  * 1. Get the database service
- * 2. Create schema tables if they don't exist
+ * 2. Ensure tables exist 
  * 3. Run migrations from JSON files
  * 4. Log database stats
  */
@@ -28,14 +28,11 @@ export async function initializeDatabase(): Promise<void> {
       console.log('  Continuing with fresh database...');
     }
 
-    // Force table creation for required tables (especially requested_songs)
+    // Ensure all required tables are created
     try {
       console.log('Ensuring required tables exist...');
-      // Try a simple query to force table creation in Drizzle ORM
       const stats = dbService.getStats();
-      if (stats.tables.length === 0) {
-        console.log('No existing tables found, will create on first access');
-      }
+      console.log(`Tables found: ${stats.tables.join(', ') || 'None'}`);
     } catch (error) {
       console.warn('Warning during table validation:', error);
     }
@@ -45,7 +42,7 @@ export async function initializeDatabase(): Promise<void> {
     console.log('\n=== Database Ready ===');
     console.log(`Database: ${finalStats.path}`);
     console.log(`Size: ${(finalStats.sizeBytes / 1024).toFixed(2)} KB`);
-    console.log(`Tables: ${finalStats.tables.join(', ')}`);
+    console.log(`Tables: ${finalStats.tables.join(', ') || 'None'}`);
     console.log('');
   } catch (error) {
     console.error('✗ Database initialization failed:', error);

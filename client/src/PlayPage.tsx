@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import PlayPageError from '@/components/PlayPageError';
 import AudioPlayer from './components/AudioPlayer';
 import LyricsDisplay from './components/LyricsDisplay';
+import { LinkPreviewMeta } from '@/components/LinkPreviewMeta';
 import type { SongData } from './types';
 import PlaySongCard from './components/PlaySongCard';
 
@@ -101,8 +102,21 @@ export default function PlayPage() {
     );
   }
 
+  // Extract song data for meta tags
+  const songInfo = songData?.itemInfo;
+  const songMetaData = songInfo ? {
+    name: songInfo.name ?? undefined,
+    artist: songInfo.artist ?? undefined,
+    album: songInfo.album ?? undefined,
+    imageUrl: songInfo.image ?? undefined
+  } : undefined;
+
   return (
     <div className='grid gap-4'>
+      <LinkPreviewMeta 
+        songData={songMetaData} 
+        url={`${window.location.origin}/play/${token}`} 
+      />
       <PlaySongCard song={songData?.itemInfo || null} />
       <AudioPlayer token={token} />
       <LyricsDisplay lyricsData={lyricsData} />

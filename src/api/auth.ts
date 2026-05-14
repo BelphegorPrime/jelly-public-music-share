@@ -32,6 +32,14 @@ router.post('/login', async (req: Request, res: Response) => {
       username,
     });
 
+    // Set token as HTTP-only cookie
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: TOKEN_EXPIRY_MINUTES * 60 * 1000,
+    });
+
     res.json({ token, expiresIn: TOKEN_EXPIRY_MINUTES * 60, expiresAt });
   } catch (error) {
     console.error('Login error:', error);
@@ -41,29 +49,39 @@ router.post('/login', async (req: Request, res: Response) => {
 
 // POST /api/auth/logout - Logout (client-side primarily)
 router.post('/logout', (req: Request, res: Response) => {
-  // Token invalidation could be handled via blacklist if needed
+  // Clear the token cookie
+  res.clearCookie('token');
   res.json({ message: 'Logout successful' });
 });
 
 // GET /api/auth/verify - Verify token validity
-router.get('/verify', (req: Request, res: Response) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ valid: false, error: 'No token provided' });
-    }
+ router.get('/verify', async (req: Request, res: Response) => {
+   try {
+     // Try to get token from Authorization header first (Bearer scheme)
+     let token: string | null = null;
+     const authHeader = req.headers.authorization;
+     
+     if (authHeader && authHeader.startsWith('Bearer ')) {
+       token = authHeader.slice(7);
+     } else if (req.cookies?.token) {
+       // Fall back to token from cookie
+       token = req.cookies.token;
+     }
 
-    const token = authHeader.slice(7);
-    const decoded = authTokenService.verifyToken(token);
+     if (!token) {
+       return res.status(401).json({ valid: false, error: 'No token provided' });
+     }
 
-    if (!decoded) {
-      return res.status(401).json({ valid: false, error: 'Invalid token' });
-    }
+     const decoded = authTokenService.verifyToken(token);
 
-    res.json({ valid: true, username: decoded.username });
-  } catch (error) {
-    res.status(401).json({ valid: false, error: 'Invalid token' });
-  }
-});
+     if (!decoded) {
+       return res.status(401).json({ valid: false, error: 'Invalid token' });
+     }
+
+     res.json({ valid: true, username: decoded.username });
+   } catch (error) {
+     res.status(401).json({ valid: false, error: 'Invalid token' });
+   }
+ });
 
 export default router;

@@ -17,7 +17,7 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
         const verifyToken = async (authToken: string) => {
             try {
                 const res = await fetch('/api/auth/verify', {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
+                    credentials: 'include'
                 });
 
                 if (res.ok) {
@@ -47,6 +47,7 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
   const login = async (username: string, password: string) => {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: React.PropsWithChildren) {
     try {
       await fetch('/api/auth/logout', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+        credentials: 'include'
       });
     } catch (error) {
       console.error('Logout API call failed:', error);

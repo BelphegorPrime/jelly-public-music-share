@@ -8,20 +8,19 @@ import type { SongData } from "@/types";
 import './SearchSongCard.css';
 
 type SearchSongCardProps = {
-    token: string,
     song: SongData,
     requestedSongs: RequestedSong[],
     refreshRequestedSongs: () => void,
     showToast: (msg: string) => void
 }
 
-const request = async (token: string, songId: string, showToast: (msg: string) => void): Promise<{ playUrl: string, token: string } | null> => {
+const request = async (songId: string, showToast: (msg: string) => void): Promise<{ playUrl: string, token: string } | null> => {
     try {
       const res = await fetch('/api/request', {
         method: 'POST',
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ songId })
       });
@@ -63,7 +62,6 @@ const getButtonText = (requestStarted: boolean, requestFinished: boolean): JSX.E
 }
 
 export default function SearchSongCard({
-    token,
     song,
     requestedSongs,
     refreshRequestedSongs,
@@ -83,13 +81,13 @@ export default function SearchSongCard({
         }
         if (!data) {
                 setRequestStarted(true);
-                const requestData = await request(token, song.id, showToast);
+                const requestData = await request(song.id, showToast);
                 setData(requestData);
                 refreshRequestedSongs();
         } else {
             copyToClipboard(data.playUrl);
         }
-    }, [data, token, song.id, refreshRequestedSongs, showToast, copyToClipboard]);
+    }, [data, song.id, refreshRequestedSongs, showToast, copyToClipboard]);
 
 
     const requestsForSong = requestedSongs.filter(rs => rs.songId === song.id);

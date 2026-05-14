@@ -5,6 +5,7 @@ import path from "node:path";
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 
 // DI Container
 import { container } from './di/container';
@@ -34,6 +35,7 @@ if (!fs.existsSync(SONG_DOWNLOAD_DIR)) {
 const app = express();
 
 // Middleware
+app.use(cookieParser());
 app.use(
   helmet({
     contentSecurityPolicy: {

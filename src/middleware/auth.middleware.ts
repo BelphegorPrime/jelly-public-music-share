@@ -21,19 +21,25 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
             return next();
         }
 
-        // Check for Bearer token in Authorization header
+        // Check for token in Authorization header or cookie
+        let token: string | null = null;
         const authHeader = req.headers.authorization;
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            // Extract token from Authorization header
+            token = authHeader.slice(7);
+        } else if (req.cookies?.token) {
+            // Fall back to token from cookie
+            token = req.cookies.token;
+        }
+
+        if (!token) {
             res.status(401).json({ 
                 error: 'Authentication required',
-                message: 'Bearer token required'
+                message: 'Bearer token or cookie required'
             });
             return;
         }
-
-        // Extract token
-        const token = authHeader.slice(7);
 
         // Verify owner authentication token
         const decoded = authTokenService.verifyToken(token);

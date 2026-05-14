@@ -10,17 +10,14 @@ import type { SongData } from './types';
 
 export type RequestedSong = {
   songId: string;
-  token: string;
   playUrl: string;
   requestedAt: number;
   expiresAt: number;
 }
 
-const fetchRequestedSongs = async (token: string, callback: (requestedSongs: RequestedSong[]) => void) => {
+const fetchRequestedSongs = async (callback: (requestedSongs: RequestedSong[]) => void) => {
   fetch("/api/request", {
-    headers: {
-      'Authorization': `Bearer ${token}`
-    }
+    credentials: 'include'
   })
     .then(async (res) => {
       if (!res.ok) {
@@ -44,11 +41,8 @@ export default function SearchPage() {
   const navigate = useNavigate();
 
   const refreshRequestedSongs = useCallback(() => {
-    if (!token) {
-        return;
-    }
-    fetchRequestedSongs(token, setRequestedSongs);
-  }, [token]);
+    fetchRequestedSongs(setRequestedSongs);
+  }, []);
 
   useEffect( () => refreshRequestedSongs(), [refreshRequestedSongs]);
 
@@ -67,9 +61,7 @@ export default function SearchPage() {
     setLoading(true);
     try {
       const res = await fetch(`/api/search?query=${encodeURIComponent(q)}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        credentials: 'include'
       });
 
       if (!res.ok) {
@@ -141,7 +133,6 @@ export default function SearchPage() {
             song={song}
             requestedSongs={requestedSongs}
             refreshRequestedSongs={refreshRequestedSongs}
-            token={token}
             showToast={showToast}
           />
         ))}

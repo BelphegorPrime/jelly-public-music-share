@@ -11,7 +11,8 @@ WORKDIR /app/client
 COPY client/package*.json ./
 RUN npm ci
 COPY client .
-RUN npm run build
+COPY package.json /app/package.json
+RUN VITE_APP_VERSION=$(npm pkg get version --prefix /app | tr -d '"') npm run build
 
 # Production stage
 FROM node:24-alpine

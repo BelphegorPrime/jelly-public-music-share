@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { LyricsData } from '@/PlayPage';
 import useMediaQuery from '@/hooks/useMediaQuery';
 
@@ -6,59 +6,68 @@ import useMediaQuery from '@/hooks/useMediaQuery';
 
 export default function LyricsDisplay({ lyricsData }: { lyricsData: LyricsData | null }) {
   const [currentLyricIndex, setCurrentLyricIndex] = useState(-1);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const firstUpdateRef = useRef(true);
-  const isBig = useMediaQuery('(width >= 28rem)');
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const isWide = useMediaQuery('(width >= 28rem)');
 
-  // Find current lyric index based on playback time
   const calculateCurrentLyricIndex = useCallback((element: HTMLAudioElement | null) => {
-    if (!element || !lyricsData || !lyricsData.lyrics || lyricsData.lyrics?.length === 0) {
+    if (!element || !lyricsData || !lyricsData.lyrics || lyricsData.lyrics.length === 0) {
       return -1;
     }
 
-    // Verify that currentTime property exists
     if (typeof element.currentTime !== 'number') {
       console.warn('currentTime property not available on audio element:', element);
       return -1;
     }
 
-    // Convert current time (seconds) to ticks
     const currentTicks = element.currentTime * 10000000;
-
-    // Find the last lyric that has started
-    for (let i = lyricsData.lyrics?.length - 1; i >= 0; i--) {
+    for (let i = lyricsData.lyrics.length - 1; i >= 0; i--) {
       if (lyricsData.lyrics[i].Start <= currentTicks) {
         return i;
       }
     }
     return -1;
-  }, [lyricsData])
+  }, [lyricsData]);
 
-  // Update lyrics in real-time while playing
   useEffect(() => {
-    const element = document.getElementById("audio-player");
-    if (element instanceof HTMLAudioElement) {
-      audioRef.current = element;
-      
-      const updateLyrics = () => {
-        const newIndex = calculateCurrentLyricIndex(element);
-        setCurrentLyricIndex(newIndex);
-      };
-
-      // Listen for time updates
-      element.addEventListener('timeupdate', updateLyrics);
-      
-      // Initial update
-      if (firstUpdateRef.current) {
-        updateLyrics();
-        firstUpdateRef.current = false;
-      }
-      
-      return () => {
-        element.removeEventListener('timeupdate', updateLyrics);
-      };
+    if (audioElement) {
+      return undefined;
     }
-  }, [lyricsData, calculateCurrentLyricIndex]);
+
+    let intervalId: number | undefined;
+    const findAudio = () => {
+      const element = document.getElementById('audio-player');
+      if (element instanceof HTMLAudioElement) {
+        setAudioElement(element);
+        return true;
+      }
+      return false;
+    };
+
+    if (!findAudio()) {
+      intervalId = window.setInterval(findAudio, 250);
+    }
+
+    return () => {
+      if (intervalId) {
+        window.clearInterval(intervalId);
+      }
+    };
+  }, [audioElement]);
+
+  useEffect(() => {
+    if (!audioElement) {
+      return undefined;
+    }
+
+    const updateLyrics = () => setCurrentLyricIndex(calculateCurrentLyricIndex(audioElement));
+
+    audioElement.addEventListener('timeupdate', updateLyrics);
+    updateLyrics();
+
+    return () => {
+      audioElement.removeEventListener('timeupdate', updateLyrics);
+    };
+  }, [audioElement, calculateCurrentLyricIndex]);
 
   if (!lyricsData || !lyricsData.lyrics) {
     return null;
@@ -66,7 +75,7 @@ export default function LyricsDisplay({ lyricsData }: { lyricsData: LyricsData |
 
   return (
     <div className='py-4'>
-        <div className={`space-y-1 text-sm ${isBig ? "" : "mb-20"}`}>
+        <div className={`space-y-1 text-sm ${isWide ? "" : "mb-20"}`}>
             {lyricsData.lyrics.map((entry, index) => {
                 const isCurrent = index === currentLyricIndex
                 return (

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 export default function AudioPlayer({ token }: { token: string }) {
     const [data, setData] = useState<{url: string} | null>(null);
-    const isBig = useMediaQuery('(width >= 28rem)');
+    const isWide = useMediaQuery('(width >= 28rem)');
 
     useEffect(() => {
         if (!token){
@@ -34,10 +34,10 @@ export default function AudioPlayer({ token }: { token: string }) {
         return <div>Loading...</div>;
     }
 
-    const className = isBig ? "" : "fixed bottom-0 left-0 right-0 z-50";
+    const className = isWide ? "" : "fixed bottom-0 left-0 right-0 z-50";
     return (
         <>
-            <h1 className={isBig ? "" : "hidden"}>Playing Song</h1>
+            <h1 className={isWide ? "" : "hidden"}>Playing Song</h1>
             <MediaThemeTailwindAudio className={`w-full ${className}`}>
                 <audio
                     id="audio-player"

@@ -11,10 +11,12 @@ type SearchSongCardProps = {
     song: SongData,
     requestedSongs: RequestedSong[],
     refreshRequestedSongs: () => void,
-    showToast: (msg: string) => void
+    showToast: (msg: string) => void,
+    tokenExpiryMinutes?: number,
+    tokenUsageLimit?: number
 }
 
-const request = async (songId: string, showToast: (msg: string) => void): Promise<{ playUrl: string, token: string } | null> => {
+const request = async (songId: string, showToast: (msg: string) => void, overwrites: { tokenExpiryMinutes?: number, tokenUsageLimit?: number }): Promise<{ playUrl: string, token: string } | null> => {
     try {
       const res = await fetch('/api/request', {
         method: 'POST',
@@ -22,7 +24,10 @@ const request = async (songId: string, showToast: (msg: string) => void): Promis
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ songId })
+        body: JSON.stringify({
+            ...overwrites,
+            songId,
+        })
       });
 
       if (!res.ok) {
@@ -65,7 +70,9 @@ export default function SearchSongCard({
     song,
     requestedSongs,
     refreshRequestedSongs,
-    showToast
+    showToast,
+    tokenExpiryMinutes,
+    tokenUsageLimit
 } : SearchSongCardProps): JSX.Element {
     const [data, setData] = useState<Awaited<ReturnType<typeof request>> | null>(null);
     const [requestStarted, setRequestStarted] = useState(false);
@@ -81,17 +88,17 @@ export default function SearchSongCard({
         }
         if (!data) {
                 setRequestStarted(true);
-                const requestData = await request(song.id, showToast);
+                const overwrites = { tokenExpiryMinutes, tokenUsageLimit }
+                const requestData = await request(song.id, showToast, overwrites);
                 setData(requestData);
                 refreshRequestedSongs();
         } else {
             copyToClipboard(data.playUrl);
         }
-    }, [data, song.id, refreshRequestedSongs, showToast, copyToClipboard]);
+    }, [data, song.id, refreshRequestedSongs, showToast, copyToClipboard, tokenExpiryMinutes, tokenUsageLimit]);
 
 
     const requestsForSong = requestedSongs.filter(rs => rs.songId === song.id);
-    console.log('Requested song for', song.name, ':', { requestsForSong });
 
     return (
         <Card key={song.id} className='rounded-2xl py-0'>

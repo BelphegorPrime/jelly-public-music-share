@@ -31,7 +31,10 @@ export class SongPlaybackService {
     this.requestedSongsService = requestedSongsService;
   }
 
-  async requestSong(songId: string): Promise<{token: string, playUrl: string}> {
+  async requestSong(songId: string, overrides?: { 
+  tokenExpiryMinutes?: number; 
+  tokenUsageLimit?: number 
+}): Promise<{token: string, playUrl: string}> {
     try {
       // Get song info from Jellyfin
       const songInfo = await this.jellyfinService.getMusicById(songId);

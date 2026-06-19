@@ -8,6 +8,7 @@ export type EphemeralTokenPayload = jwt.JwtPayload & {
   tokenId: string;
   songId: string;
   expiresAt: number;
+  usageLimit?: number; // Explicitly add usageLimit to type
 };
 
 
@@ -76,15 +77,21 @@ export class EphemeralTokenService {
     }
   }
 
-  /**
-   * Generate an ephemeral token for a song
-   */
-  generateToken(data: { songId: string }): {
+/**
+ * Generate an ephemeral token for a song
+ */
+  generateToken(data: { songId: string }, overrides?: { 
+    tokenExpiryMinutes?: number; 
+    tokenUsageLimit?: number 
+  }): {
     token: string;
     expiresAt: number;
   } {
     const tokenId = uuidv4();
-    const expiresAt = Date.now() + this.expiryMinutes * 60 * 1000;
+    // Use override or default for expiry minutes
+    const expiryMinutes = overrides?.tokenExpiryMinutes ?? this.expiryMinutes;
+    const usageLimit = overrides?.tokenUsageLimit ?? this.usageLimit;
+    const expiresAt = Date.now() + expiryMinutes * 60 * 1000;
     console.log(
       `Generating ephemeral token with ID: ${tokenId} for song ID: ${data.songId}`
     );
@@ -94,10 +101,11 @@ export class EphemeralTokenService {
       ...data,
       tokenId,
       expiresAt,
+      usageLimit // Add the usage limit to the token payload so it can be verified later
     };
 
     const token = jwt.sign(payload, this.secret, {
-      expiresIn: `${this.expiryMinutes}min`,
+      expiresIn: `${expiryMinutes}min`,
     });
     return { token, expiresAt };
   }
@@ -159,12 +167,15 @@ export class EphemeralTokenService {
     // Increment usage count
     const newUsage = currentUsage + 1;
 
-    console.log(
-      `Ephemeral token ${verifiedToken.tokenId} usage: ${newUsage}/${this.usageLimit}`
-    );
-
     // Check if usage limit has been reached
-    if (newUsage <= this.usageLimit) {
+    // The usageLimit should come from the token payload if it exists (from override)
+    // If not, fallback to class default
+    const tokenUsageLimit = verifiedToken.usageLimit ?? this.usageLimit;
+    console.log(
+      `Ephemeral token ${verifiedToken.tokenId} usage: ${newUsage}/${tokenUsageLimit}`
+    );
+    
+    if (newUsage <= tokenUsageLimit) {
       // Update usage count in database
       await this.createOrUpdateTokenUsage(verifiedToken.tokenId, newUsage, false, verifiedToken.expiresAt);
       // Return the token data
@@ -195,14 +206,17 @@ export class EphemeralTokenService {
     }
   }
 
-  /**
-   * Create a new ephemeral token for a song
-   */
-  createEphemeralToken(data: { songId: string }): {
+/**
+ * Create a new ephemeral token for a song
+ */
+  createEphemeralToken(data: { songId: string }, overrides?: { 
+    tokenExpiryMinutes?: number; 
+    tokenUsageLimit?: number 
+  }): {
     token: string;
     expiresAt: number;
   } {
-    return this.generateToken(data);
+    return this.generateToken(data, overrides);
   }
 
   /**

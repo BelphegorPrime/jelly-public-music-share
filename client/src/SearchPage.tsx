@@ -39,6 +39,17 @@ export default function SearchPage() {
   const [toast, setToast] = useState<string | null>(null);
   const { token, user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  // Token configuration state with defaults from localStorage or config
+  const [tokenExpiryMinutes, setTokenExpiryMinutes] = useState<number>(() => {
+    const saved = localStorage.getItem('tokenExpiryMinutes');
+    return saved ? parseInt(saved) : 1440; // default 24 hours
+  });
+  
+  const [tokenUsageLimit, setTokenUsageLimit] = useState<number>(() => {
+    const saved = localStorage.getItem('tokenUsageLimit');
+    return saved ? parseInt(saved) : 1; // default 1 use
+  });
 
   const refreshRequestedSongs = useCallback(() => {
     fetchRequestedSongs(setRequestedSongs);
@@ -52,6 +63,15 @@ export default function SearchPage() {
     setToast(msg);
     setTimeout(() => setToast(null), 2000);
   }, []);
+
+  // Save to localStorage whenever values change
+  useEffect(() => {
+    localStorage.setItem('tokenExpiryMinutes', tokenExpiryMinutes.toString());
+  }, [tokenExpiryMinutes]);
+
+  useEffect(() => {
+    localStorage.setItem('tokenUsageLimit', tokenUsageLimit.toString());
+  }, [tokenUsageLimit]);
 
   async function search() {
     if (!q.trim()){
@@ -103,6 +123,41 @@ export default function SearchPage() {
         </Button>
       </div>
 
+      {/* Token Settings Panel */}
+      <Card className='rounded-2xl mb-6'>
+        <CardContent className='p-4'>
+          <h2 className='text-lg font-semibold mb-3'>Link Settings</h2>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+            <div>
+              <label className='block text-sm font-medium mb-1'>Expiry Minutes</label>
+              <Input
+                type='number'
+                value={tokenExpiryMinutes}
+                onChange={(e) => setTokenExpiryMinutes(parseInt(e.target.value) || 1)}
+                min="1"
+                className='w-full'
+              />
+              <p className='text-xs text-gray-500 mt-1'>
+                How long the link will be valid (in minutes)
+              </p>
+            </div>
+            <div>
+              <label className='block text-sm font-medium mb-1'>Usage Limit</label>
+              <Input
+                type='number'
+                value={tokenUsageLimit}
+                onChange={(e) => setTokenUsageLimit(parseInt(e.target.value) || 1)}
+                min="1"
+                className='w-full'
+              />
+              <p className='text-xs text-gray-500 mt-1'>
+                Maximum number of times the link can be used
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Search */}
       <Card className='rounded-2xl'>
         <CardContent className='p-4 flex gap-3'>
@@ -134,6 +189,8 @@ export default function SearchPage() {
             requestedSongs={requestedSongs}
             refreshRequestedSongs={refreshRequestedSongs}
             showToast={showToast}
+            tokenExpiryMinutes={tokenExpiryMinutes}
+            tokenUsageLimit={tokenUsageLimit}
           />
         ))}
       </div>

@@ -9,25 +9,28 @@ const playbackService = container.resolve(SongPlaybackService);
 const requestedSongsService = container.resolve(RequestedSongsService);
 
 // POST /api/request - Request access to play a song
-router.post('/', authenticate, async (req: Request, res: Response) => {
-  const { songId } = req.body;
+ router.post('/', authenticate, async (req: Request, res: Response) => {
+   const { songId, tokenExpiryMinutes, tokenUsageLimit } = req.body;
 
-  if (!songId) {
-    return res.status(400).json({ error: 'songId is required' });
-  }
+   if (!songId) {
+     return res.status(400).json({ error: 'songId is required' });
+   }
 
-  try {
-    // Request song and get token and play URL
-    const { token, playUrl } = await playbackService.requestSong(songId);
+   try {
+     // Request song and get token and play URL
+     const { token, playUrl } = await playbackService.requestSong(songId, {
+       tokenExpiryMinutes,
+       tokenUsageLimit
+     });
 
-    res.json({ token, playUrl });
-  } catch (error) {
-    res.status(500).json({
-      error: 'Failed to request song',
-      message: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-});
+     res.json({ token, playUrl });
+   } catch (error) {
+     res.status(500).json({
+       error: 'Failed to request song',
+       message: error instanceof Error ? error.message : 'Unknown error'
+     });
+   }
+ });
 
 // GET /api/request - Get all currently requested songs
 router.get('/', authenticate, async (req: Request, res: Response) => {

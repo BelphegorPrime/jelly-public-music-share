@@ -1,10 +1,10 @@
 import express, { Request, Response } from 'express';
 import { container } from '../di/container';
-import { JellyfinService } from '../services/jellyfin/jellyfin.service';
+import { MediaService } from '../services/media/media.service';
 import { EphemeralTokenService } from '../services/token/ephemeral-token.service';
 
 const router = express.Router();
-const jellyfinService = container.resolve(JellyfinService);
+const mediaService = container.resolve(MediaService);
 const ephemeralTokenService = container.resolve(EphemeralTokenService);
 
 // GET /api/lyrics/:token - Get lyrics for a song using a valid one-time token
@@ -25,9 +25,11 @@ router.get('/:token', async (req: Request, res: Response) => {
 
     const { songId } = tokenData;
 
-    // Fetch lyrics from Jellyfin
-    const lyricsData = await jellyfinService.getLyrics(songId);
-
+    // Fetch lyrics from media service (Jellyfin or Navidrome)
+    const lyricsData = await mediaService.getLyrics(songId);
+    
+    // Note: Lyrics are only available from Jellyfin, so we'll need to handle this differently
+    // For now, we'll just return the basic song info
     res.json({
         lyrics: lyricsData?.lyrics || null,
     });

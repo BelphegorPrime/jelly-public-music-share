@@ -1,14 +1,13 @@
 import express, { Request, Response } from 'express';
 import { container } from '../di/container';
-import { JellyfinService } from '../services/jellyfin/jellyfin.service';
+import { MediaService } from '../services/media/media.service';
 import { EphemeralTokenService } from '../services/token/ephemeral-token.service';
-import { getSongData } from '../utils/getSongData';
 
 const router = express.Router();
-const jellyfinService = container.resolve(JellyfinService);
+const mediaService = container.resolve(MediaService);
 const ephemeralTokenService = container.resolve(EphemeralTokenService);
 
-// GET /api/songData/:token - Get lyrics for a song using a valid one-time token
+// GET /api/songData/:token - Get song data using a valid one-time token
 router.get('/:token', async (req: Request, res: Response) => {
   const { token } = req.params;
 
@@ -26,15 +25,15 @@ router.get('/:token', async (req: Request, res: Response) => {
 
     const { songId } = tokenData;
 
-    const itemInfo = await jellyfinService.getMusicById(songId)
+    const itemInfo = await mediaService.getMusicById(songId)
     
     res.json({
-        itemInfo: itemInfo ? getSongData(itemInfo) : null 
+        itemInfo: itemInfo || null 
     });
   } catch (error) {
     console.error('Error in /api/songData/:token route:', error);
     res.status(500).json({
-      error: 'Failed to fetch lyrics',
+      error: 'Failed to fetch song data',
       message: error instanceof Error ? error.message : 'Unknown error'
     });
   }

@@ -1,17 +1,17 @@
 import fs from 'fs';
 import path from 'path';
-import { JellyfinServiceInterface } from './jellyfin/jellyfin.interface';
+import { MediaServiceInterface } from './media/media.service.interface';
 import { FileServiceInterface } from './file/file.interface';
 import { BASE_URL } from '../config';
-import { JellyfinService } from './jellyfin/jellyfin.service';
 import { inject, injectable } from 'tsyringe';
 import { FileService } from './file/file.service';
 import { EphemeralTokenService } from './token/ephemeral-token.service';
 import { RequestedSongsService } from './requested-songs.service';
+import { MediaService } from './media/media.service';
 
 @injectable()
 export class SongPlaybackService {
-  private jellyfinService: JellyfinServiceInterface;
+  private mediaService: MediaServiceInterface;
   private ephemeralTokenService: EphemeralTokenService;
   private fileService: FileServiceInterface;
   private requestedSongsService: RequestedSongsService;
@@ -19,13 +19,13 @@ export class SongPlaybackService {
 
   constructor(
     @inject('SONG_DOWNLOAD_DIR') downloadDir: string,
-    @inject(JellyfinService) jellyfinService: JellyfinService,
+    @inject(MediaService) mediaService: MediaService,
     @inject(EphemeralTokenService) ephemeralTokenService: EphemeralTokenService,
     @inject(FileService) fileService: FileService,
     @inject(RequestedSongsService) requestedSongsService: RequestedSongsService,
   ) {
     this.downloadDirectory = downloadDir;
-    this.jellyfinService = jellyfinService;
+    this.mediaService = mediaService;
     this.ephemeralTokenService = ephemeralTokenService;
     this.fileService = fileService;
     this.requestedSongsService = requestedSongsService;
@@ -34,11 +34,11 @@ export class SongPlaybackService {
   async requestSong(songId: string): Promise<{token: string, playUrl: string}> {
     try {
       // Get song info from Jellyfin
-      const songInfo = await this.jellyfinService.getMusicById(songId);
+      const songInfo = await this.mediaService.getMusicById(songId);
       if (!songInfo) {
         throw new Error('Song not found');
       }
-      console.log(`Publishing song: ${songInfo.Name} (ID: ${songId})`);
+      console.log(`Publishing song: ${songInfo.name} (ID: ${songId})`);
 
       // Create download directory if it doesn't exist
       await fs.promises.mkdir(this.downloadDirectory, { recursive: true });
@@ -55,7 +55,7 @@ export class SongPlaybackService {
         console.log(`File not found locally, downloading from Jellyfin: ${destinationPath}`);
         try {
           // File doesn't exist, proceed to download
-          await this.jellyfinService.download(songId, songInfo, destinationPath);
+          await this.mediaService.download(songId, songInfo, destinationPath);
         } catch (downloadError) {
           // Fall back to placeholder if download fails
           await fs.promises.writeFile(destinationPath, Buffer.from('test-placeholder-audio-data'));

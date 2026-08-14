@@ -20,6 +20,7 @@ import searchRouter from './api/search';
 import requestRouter from './api/request';
 import validateRouter from './api/validate';
 import streamRouter from './api/stream';
+import imageRouter from './api/image';
 import lyricsRouter from './api/lyrics';
 import songDataRouter from './api/songData';
 
@@ -58,6 +59,7 @@ app.use('/api/search', searchRouter);
 app.use('/api/request', requestRouter);
 app.use('/api/validate', validateRouter);
 app.use('/api/stream', streamRouter);
+app.use('/api/image', imageRouter);
 app.use('/api/lyrics', lyricsRouter);
 app.use('/api/songData', songDataRouter)
 

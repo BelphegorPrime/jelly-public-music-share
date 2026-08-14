@@ -1,6 +1,4 @@
 import fs from 'node:fs';
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
 import path from 'node:path';
 import { Readable } from 'node:stream';
 import { Jellyfin, Api } from '@jellyfin/sdk';
@@ -8,12 +6,15 @@ import { getItemsApi } from '@jellyfin/sdk/lib/utils/api/items-api';
 import { getUserApi } from '@jellyfin/sdk/lib/utils/api/user-api';
 import { getLibraryApi } from '@jellyfin/sdk/lib/utils/api/library-api';
 import { getLyricsApi } from '@jellyfin/sdk/lib/utils/api/lyrics-api';
-import { BaseItemDto, LyricLine } from '@jellyfin/sdk/lib/generated-client/models';
-import { JELLYFIN_URL, JELLYFIN_USERNAME, JELLYFIN_API_KEY } from '../../config';
+import { BaseItemDto } from '@jellyfin/sdk/lib/generated-client/models';
+import { JELLYFIN_URL, JELLYFIN_USERNAME, JELLYFIN_API_KEY } from '../../../config';
+import { LyricItem, MediaItem } from '../../../types/media-item.interface';
+import { transcodeToMP3 } from '../../../utils/transCodeToMP3';
+import { MediaServiceInterface } from '../media.service.interface';
+import { getDurartionInMinutesAndSeconds } from '../../../utils/getDurartionInMinutesAndSeconds';
 
-const execPromise = promisify(exec);
 
-export class JellyfinService {
+export class JellyfinService implements MediaServiceInterface {
   private baseUrl: string;
   private username: string;
   private apiKey: string;
@@ -49,7 +50,23 @@ export class JellyfinService {
     this.lyricsApi = getLyricsApi(this.api);
   }
 
-  async getMusicLibrary(ids?: string[]): Promise<Array<BaseItemDto>> {
+  private convertToMediaItem(item: BaseItemDto): MediaItem {
+    return {
+      id: item.Id ?? '',
+      name: item.Name ?? '',
+      artist: item.ArtistItems?.[0]?.Name || 'Unknown Artist',
+      album: item.Album ?? undefined,
+      duration: item.RunTimeTicks ? 
+        getDurartionInMinutesAndSeconds(item.RunTimeTicks / 10000000) :
+        [0, 0],
+      type: item.Type,
+      image: item.ImageTags?.Primary ? `${this.baseUrl}/Items/${item.Id}/Images/Primary?tag=${item.ImageTags.Primary}&maxWidth=200` : null,
+      source: "JELLYFIN",
+      container: item.Container,
+    };
+  }
+
+  async getMusicLibrary(ids?: string[]): Promise<Array<MediaItem>> {
     // Return empty array if Jellyfin not configured
     if (!this.baseUrl || !this.username || !this.apiKey) {
       return [];
@@ -61,7 +78,7 @@ export class JellyfinService {
       const user = usersResponse.data.find(u => u.Name === this.username);
 
       if (!user?.Id) {
-        console.error(`User '${this.username}' not found`);
+        console.error(`JELLYFIN: User '${this.username}' not found`);
         return [];
       }
 
@@ -74,21 +91,22 @@ export class JellyfinService {
         fields: []
       });
 
-      return response.data.Items || [];
+      // Convert BaseItemDto to MediaItem
+      return (response.data.Items || []).map(item => this.convertToMediaItem(item));
     } catch (error) {
-      console.error('Error fetching music library:', error);
+      console.error('JELLYFIN: Error fetching music library:', error);
       // Return empty array instead of throwing to handle missing Jellyfin server gracefully
       return [];
     }
   }
 
-  async getMusicById(itemId: string): Promise<BaseItemDto | null> {
+  async getMusicById(itemId: string): Promise<MediaItem | null> {
     if (!this.baseUrl || !this.username || !this.apiKey) {
       return null;
     }
 
     const items = await this.getMusicLibrary([itemId]);
-    const item = items.find(i => i.Id === itemId);
+    const item = items.find(i => i.id === itemId);
     if (item) {
       return item;
     }
@@ -112,20 +130,20 @@ export class JellyfinService {
         fields: ['PrimaryImageAspectRatio', 'CanDelete', 'MediaSourceCount'],
         includeItemTypes: ['Playlist', 'MusicAlbum', 'Audio'],
       });
-      console.log(`Search for "${query}" returned ${response.data.Items?.length || 0} items`);
+      console.log(`JELLYFIN: Search for "${query}" returned ${response.data.Items?.length || 0} items`);
 
-      return response.data.Items || [];
+      return (response.data.Items || []).map(item => this.convertToMediaItem(item));
     } catch (error) {
-      console.error('Error searching music:', error);
+      console.error('JELLYFIN: Error searching music:', error);
       // Return empty array instead of throwing to handle missing Jellyfin server gracefully
       return [];
     }
   }
 
-  async download(itemId: string, itemInfo: BaseItemDto, destinationPath: string): Promise<void> {
+  async download(itemId: string, itemInfo: MediaItem, destinationPath: string): Promise<void> {
     // Generate unique filename and token using JWT service
-    const extension = itemInfo.Container ? `.${itemInfo.Container}` : '.mp3';
-    const safeFileName = `${itemInfo.Name}${extension}`;
+    const extension = itemInfo.container ? `.${itemInfo.container}` : '.mp3';
+    const safeFileName = `${itemInfo.name}${extension}`;
     const fileName = `${itemId}_${safeFileName}`;
 
     const downloadLocation = path.join("/tmp", fileName);
@@ -136,6 +154,10 @@ export class JellyfinService {
         responseType: "stream"
       }
     );
+
+    if (response.status !== 200) {
+      throw new Error(`Failed to download item ${itemId} from Jellyfin. Status code: ${response.status}`);
+    }
 
     const stream = response.data as unknown as Readable;
 
@@ -149,7 +171,7 @@ export class JellyfinService {
     });
 
     // Transcode to MP3 after download
-    await this.transcodeToMP3(downloadLocation, destinationPath);
+    await transcodeToMP3(downloadLocation, destinationPath);
   }
 
   /**
@@ -157,7 +179,7 @@ export class JellyfinService {
    * @param itemId The ID of the media item to fetch lyrics for
    * @returns Object containing lyrics text and format, or null if not found
    */
-  async getLyrics(itemId: string): Promise<{ lyrics: LyricLine[] } | null> {
+  async getLyrics(itemId: string): Promise<LyricItem | null> {
     if (!this.baseUrl || !this.apiKey) {
       return null;
     }
@@ -166,36 +188,12 @@ export class JellyfinService {
       const { data } = await this.lyricsApi.getLyrics({ itemId })
 
       if (data.Lyrics) {
-        return { lyrics: data.Lyrics}
+        return { lyrics: data.Lyrics }
       }
 
       return null;
     } catch (error) {
-      console.error(`Error fetching lyrics for item ${itemId}:`, error);
-      return null;
-    }
-  }
-
-  /**
-   * Transcode audio file to MP3 format using ffmpeg
-   * @param filePath Path to the file to be transcoded
-   * @param destinationPath Path where the transcoded file should be saved
-   */
-  private async transcodeToMP3(filePath: string, destinationPath: string): Promise<void> {
-    try {
-      // Run ffmpeg command to convert to MP3
-      const command = `ffmpeg -i "${filePath}" -acodec libmp3lame "${destinationPath}"`;
-
-      console.log(`Transcoding ${filePath} to MP3...`);
-      await execPromise(command);
-
-      // Remove original file (since we're replacing it)
-      await fs.promises.unlink(filePath);
-
-      console.log(`Transcoded successfully: ${destinationPath}`);
-    } catch (error) {
-      console.error('Error transcoding to MP3:', error);
-      // Continue with original file if transcoding fails
+      throw new Error(`JELLYFIN: Error fetching lyrics for item ${itemId}: ${(error as Error).message}`);
     }
   }
 }

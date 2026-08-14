@@ -1,6 +1,6 @@
 {
   "name": "jelly-public-music-share",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "A self-hosted music sharing platform for the Reddit r/selfhost community",
   "main": "dist/index.js",
   "scripts": {
@@ -34,6 +34,7 @@
     "helmet": "^7.0.0",
     "jsonwebtoken": "^9.0.3",
     "reflect-metadata": "^0.2.2",
+    "subsonic-api": "^3.3.1",
     "tsyringe": "^4.10.0",
     "uuid": "^14.0.0"
   },

@@ -15,6 +15,7 @@ To keep it private and simple, links are intended to be one-time usable. Each li
 ## Features
 
 - Secure music sharing from Jellyfin libraries
+- Secure music sharing from Navidrome libraries (experimental)
 - Self-hosted deployment
 - Docker container support
 - Docker Compose support
@@ -44,6 +45,19 @@ nano .env
 wget https://raw.githubusercontent.com/BelphegorPrime/jelly-public-music-share/main/docker-compose.yml
 docker compose up -d
 ```
+
+### Navidrome Support (Experimental)
+
+To use Navidrome instead of Jellyfin, uncomment the Navidrome configuration in your `.env` file and provide the required Navidrome credentials:
+
+```
+# Navidrome Configuration
+NAVIDROME_URL=http://localhost:4533
+NAVIDROME_USERNAME=your_navidrome_username
+NAVIDROME_PASSWORD=your_navidrome_password
+```
+
+The application will automatically detect which media server is configured and use the appropriate service. If both services are configured, both can be searched.
 
 ### Manual Setup (Alternative)
 

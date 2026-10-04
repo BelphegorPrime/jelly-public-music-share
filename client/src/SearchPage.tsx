@@ -51,6 +51,11 @@ export default function SearchPage() {
     return saved ? parseInt(saved) : 1; // default 1 use
   });
 
+  const [allowedRenewalCount, setAllowedRenewalCount] = useState<number>(() => {
+    const saved = localStorage.getItem('allowedRenewalCount');
+    return saved === null ? 0 : parseInt(saved);
+  });
+
   const refreshRequestedSongs = useCallback(() => {
     fetchRequestedSongs(setRequestedSongs);
   }, []);
@@ -72,6 +77,10 @@ export default function SearchPage() {
   useEffect(() => {
     localStorage.setItem('tokenUsageLimit', tokenUsageLimit.toString());
   }, [tokenUsageLimit]);
+
+  useEffect(() => {
+    localStorage.setItem('allowedRenewalCount', allowedRenewalCount.toString());
+  }, [allowedRenewalCount]);
 
   async function search() {
     if (!q.trim()){
@@ -127,7 +136,7 @@ export default function SearchPage() {
       <Card className='rounded-2xl mb-6'>
         <CardContent className='p-4'>
           <h2 className='text-lg font-semibold mb-3'>Link Settings</h2>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
             <div>
               <label className='block text-sm font-medium mb-1'>Expiry Minutes</label>
               <Input
@@ -156,6 +165,18 @@ export default function SearchPage() {
               <p className='text-xs text-gray-500 mt-1'>
                 Maximum number of times the link can be used
               </p>
+            </div>
+            <div>
+              <label className='block text-sm font-medium mb-1'>Allowed Renewals</label>
+              <Input
+                type='number'
+                value={allowedRenewalCount}
+                onChange={(e) => setAllowedRenewalCount(Math.max(0, parseInt(e.target.value) || 0))}
+                min="0"
+                step="1"
+                className='w-full'
+              />
+              <p className='text-xs text-gray-500 mt-1'>Maximum replacement links this link can create</p>
             </div>
           </div>
         </CardContent>
@@ -194,6 +215,7 @@ export default function SearchPage() {
             showToast={showToast}
             tokenExpiryMinutes={tokenExpiryMinutes}
             tokenUsageLimit={tokenUsageLimit}
+            allowedRenewalCount={allowedRenewalCount}
           />
         ))}
       </div>

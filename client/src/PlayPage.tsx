@@ -98,7 +98,7 @@ export default function PlayPage() {
 
   if (renderContent === 'error' || renderContent === 'expired' || renderContent === 'not-found') {
     return (
-      <PlayPageError type={renderContent} />
+      <PlayPageError type={renderContent} token={token} />
     );
   }
 

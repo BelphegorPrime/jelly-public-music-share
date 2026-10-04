@@ -1,5 +1,5 @@
 import { injectable, inject } from 'tsyringe';
-import { eq, lt, gt } from 'drizzle-orm';
+import { eq, lt } from 'drizzle-orm';
 import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../schema';
 import { DatabaseService } from '../database.service';
@@ -21,9 +21,19 @@ export interface EphemeralTokenEntity {
 @injectable()
 export class EphemeralTokensRepository {
   private db: BetterSQLite3Database<typeof schema>;
+  private dbService: DatabaseService;
 
   constructor(@inject(DatabaseService) dbService: DatabaseService) {
-    this.db = dbService.db;
+    this.dbService = dbService;
+    this.db = this.dbService.db;
+  }
+
+  markRenewalUsed(tokenId: string): boolean {
+    return this.dbService.markRenewalUsed(tokenId);
+  }
+
+  releaseRenewal(tokenId: string): void {
+    this.dbService.releaseRenewal(tokenId);
   }
 
   /**

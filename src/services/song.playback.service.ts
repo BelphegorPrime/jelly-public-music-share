@@ -33,7 +33,8 @@ export class SongPlaybackService {
 
   async requestSong(songId: string, overrides?: { 
   tokenExpiryMinutes?: number; 
-  tokenUsageLimit?: number 
+  tokenUsageLimit?: number;
+  allowedRenewalCount?: number;
 }): Promise<{token: string, playUrl: string}> {
     try {
       // Get song info from Jellyfin

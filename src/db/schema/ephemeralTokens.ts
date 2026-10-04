@@ -14,6 +14,13 @@ export const createEphemeralTokenUsageTableQuery = `
     )
 `
 
+export const createEphemeralTokenRenewalsTableQuery = `
+    CREATE TABLE IF NOT EXISTS ephemeral_token_renewals (
+        token_id TEXT PRIMARY KEY NOT NULL,
+        renewed_at INTEGER NOT NULL
+    )
+`
+
 export const ephemeralTokenUsage = sqliteTable(
     "ephemeral_token_usage",
     {
@@ -22,5 +29,13 @@ export const ephemeralTokenUsage = sqliteTable(
         blacklisted: integer("blacklisted", { mode: "boolean" }).notNull().default(false),
         createdAt: integer("created_at").notNull(),
         expiresAt: integer("expires_at").notNull(),
+    }
+);
+
+export const ephemeralTokenRenewals = sqliteTable(
+    "ephemeral_token_renewals",
+    {
+        tokenId: text("token_id").primaryKey(),
+        renewedAt: integer("renewed_at").notNull(),
     }
 );

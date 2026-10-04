@@ -4,7 +4,6 @@ import { sql } from 'drizzle-orm';
 import { singleton } from 'tsyringe';
 
 import fs from 'fs';
-import path from 'path';
 
 import * as schema from './schema';
 import { DATA_DIR } from '../config';
@@ -125,6 +124,8 @@ AND name NOT LIKE 'sqlite_%'
             } else {
                 console.log(`Tables already exist: ${tables.map(t => t.name).join(', ')}`);
             }
+
+            this.sqlite.exec(schema.createEphemeralTokenRenewalsTableQuery);
         } catch (error) {
             console.error('Error checking/creating tables:', error);
         }
@@ -313,5 +314,19 @@ AND name NOT LIKE 'sqlite_%'
         } catch (error) {
             console.error('Failed to close database', error);
         }
+    }
+
+    markRenewalUsed(tokenId: string): boolean {
+        const result = this.raw
+            .prepare('INSERT OR IGNORE INTO ephemeral_token_renewals (token_id, renewed_at) VALUES (?, ?)')
+            .run(tokenId, Date.now());
+
+        return result.changes === 1;
+    }
+
+    releaseRenewal(tokenId: string): void {
+        this.raw
+            .prepare('DELETE FROM ephemeral_token_renewals WHERE token_id = ?')
+            .run(tokenId);
     }
 }

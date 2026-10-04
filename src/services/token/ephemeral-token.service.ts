@@ -1,14 +1,15 @@
+import { JWT_SECRET_CONSUMER, TOKEN_ALLOWED_RENEWAL_COUNT, TOKEN_EXPIRY_MINUTES, TOKEN_USAGE_LIMIT } from '../../config';
 import { singleton, inject } from 'tsyringe';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { EphemeralTokensRepository } from '../../db/repositories/ephemeral-tokens.repository';
-import { JWT_SECRET_CONSUMER, TOKEN_EXPIRY_MINUTES, TOKEN_USAGE_LIMIT } from '../../config';
 
 export type EphemeralTokenPayload = jwt.JwtPayload & {
   tokenId: string;
   songId: string;
   expiresAt: number;
   usageLimit?: number; // Explicitly add usageLimit to type
+  allowedRenewalCount?: number;
 };
 
 
@@ -22,6 +23,7 @@ export class EphemeralTokenService {
   private secret: string = JWT_SECRET_CONSUMER;
   private expiryMinutes: number = TOKEN_EXPIRY_MINUTES;
   private usageLimit: number = TOKEN_USAGE_LIMIT;
+  private allowedRenewalCount: number = TOKEN_ALLOWED_RENEWAL_COUNT;
 
   constructor(
     @inject(EphemeralTokensRepository) private ephemeralTokensRepository: EphemeralTokensRepository
@@ -82,7 +84,8 @@ export class EphemeralTokenService {
  */
   generateToken(data: { songId: string }, overrides?: { 
     tokenExpiryMinutes?: number; 
-    tokenUsageLimit?: number 
+    tokenUsageLimit?: number;
+    allowedRenewalCount?: number;
   }): {
     token: string;
     expiresAt: number;
@@ -91,6 +94,7 @@ export class EphemeralTokenService {
     // Use override or default for expiry minutes
     const expiryMinutes = overrides?.tokenExpiryMinutes ?? this.expiryMinutes;
     const usageLimit = overrides?.tokenUsageLimit ?? this.usageLimit;
+    const allowedRenewalCount = overrides?.allowedRenewalCount ?? this.allowedRenewalCount;
     const expiresAt = Date.now() + expiryMinutes * 60 * 1000;
     console.log(
       `Generating ephemeral token with ID: ${tokenId} for song ID: ${data.songId}`
@@ -101,7 +105,8 @@ export class EphemeralTokenService {
       ...data,
       tokenId,
       expiresAt,
-      usageLimit // Add the usage limit to the token payload so it can be verified later
+      usageLimit,
+      allowedRenewalCount
     };
 
     const token = jwt.sign(payload, this.secret, {
@@ -134,6 +139,57 @@ export class EphemeralTokenService {
       // Token is invalid or expired
       return null;
     }
+  }
+
+  async consumeRenewal(token: string): Promise<{
+    tokenId: string;
+    songId: string;
+    tokenExpiryMinutes: number;
+    tokenUsageLimit?: number;
+    allowedRenewalCount: number;
+  } | null> {
+    try {
+      const decoded = jwt.verify(token, this.secret, { ignoreExpiration: true }) as EphemeralTokenPayload;
+      if (
+        typeof decoded.songId !== 'string' ||
+        typeof decoded.tokenId !== 'string' ||
+        typeof decoded.iat !== 'number' ||
+        typeof decoded.exp !== 'number' ||
+        typeof decoded.expiresAt !== 'number'
+      ) {
+        return null;
+      }
+
+      const allowedRenewalCount = decoded.allowedRenewalCount ?? 0;
+      if (!Number.isSafeInteger(allowedRenewalCount) || allowedRenewalCount <= 0) {
+        return null;
+      }
+
+      const expired = decoded.exp * 1000 <= Date.now() || decoded.expiresAt <= Date.now();
+      const exhausted = await this.isTokenBlacklisted(decoded.tokenId);
+      if (!expired && !exhausted) {
+        return null;
+      }
+
+      const reserved = this.ephemeralTokensRepository.markRenewalUsed(decoded.tokenId);
+      if (!reserved) {
+        return null;
+      }
+
+      return {
+        tokenId: decoded.tokenId,
+        songId: decoded.songId,
+        tokenExpiryMinutes: Math.round((decoded.exp - decoded.iat) / 60),
+        tokenUsageLimit: typeof decoded.usageLimit === 'number' ? decoded.usageLimit : undefined,
+        allowedRenewalCount: allowedRenewalCount - 1
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  async releaseRenewal(tokenId: string): Promise<void> {
+    this.ephemeralTokensRepository.releaseRenewal(tokenId);
   }
 
   /**
@@ -211,7 +267,8 @@ export class EphemeralTokenService {
  */
   createEphemeralToken(data: { songId: string }, overrides?: { 
     tokenExpiryMinutes?: number; 
-    tokenUsageLimit?: number 
+    tokenUsageLimit?: number;
+    allowedRenewalCount?: number;
   }): {
     token: string;
     expiresAt: number;

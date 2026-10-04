@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { container } from '../di/container';
 import { SongPlaybackService } from '../services/song.playback.service';
 import { FileHandlerService } from '../services/file/file.handler.service';
+import { EphemeralTokenService } from '../services/token/ephemeral-token.service';
 
 type ValidateResponse = {
   valid: boolean;
@@ -13,6 +14,27 @@ type ValidateResponse = {
 const router = express.Router();
 const playbackService = container.resolve(SongPlaybackService);
 const fileHandlerService = container.resolve(FileHandlerService);
+const ephemeralTokenService = container.resolve(EphemeralTokenService);
+
+router.post('/:token/renew', async (req: Request, res: Response) => {
+  const renewalOptions = await ephemeralTokenService.consumeRenewal(req.params.token);
+
+  if (!renewalOptions) {
+    return res.status(403).json({ error: 'Token is not eligible for renewal or its renewal limit has been reached' });
+  }
+
+  const { songId, tokenId, ...tokenOptions } = renewalOptions;
+  try {
+    const replacementLink = await playbackService.requestSong(songId, tokenOptions);
+    return res.json(replacementLink);
+  } catch (error) {
+    await ephemeralTokenService.releaseRenewal(tokenId);
+    return res.status(500).json({
+      error: 'Failed to create a replacement link',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
 
 // GET /play/:token - Play a song using token
 router.get('/:token', async (req: Request, res: Response<ValidateResponse>) => {
@@ -27,7 +49,7 @@ router.get('/:token', async (req: Request, res: Response<ValidateResponse>) => {
     const result = await playbackService.playSong(token, true);
 
     if (!result) {
-        return res.status(401).json({ valid: false, expired: true, notFound: false, error: 'Token is invalid or expired' });
+      return res.status(401).json({ valid: false, expired: true, notFound: false, error: 'Token is invalid or expired' });
     }
     console.log('Play song result:', result);
     const { filePath } = result;

@@ -4,9 +4,35 @@ Share tracks from a self-hosted Jellyfin or Navidrome library without creating a
 
 Links open a focused playback page and do not give listeners access to your music library. Link expiry, usage limits, and allowed renewals can be set when creating a link.
 
-![Library search and share-link settings](docs/screenshots/library.png)
+## Screenshots
 
-*Example interface with fictional sample data.*
+| Page | Light mode | Dark mode |
+| --- | --- | --- |
+| Library | ![Library in light mode](docs/screenshots/library-light.png) | ![Library in dark mode](docs/screenshots/library-dark.png) |
+| Sign in | ![Sign-in page in light mode](docs/screenshots/login-light.png) | ![Sign-in page in dark mode](docs/screenshots/login-dark.png) |
+| Shared playback | ![Playback page in light mode](docs/screenshots/play-demo-token-light.png) | ![Playback page in dark mode](docs/screenshots/play-demo-token-dark.png) |
+
+These screenshots use fictional sample data and mocked API responses.
+
+From the repository root, install dependencies and Chromium once:
+
+```bash
+npm install
+npm install --prefix client
+npx playwright install chromium
+```
+
+After UI changes, regenerate the default screenshots:
+
+```bash
+npm run screenshots
+```
+
+The command starts the frontend, uses mocked API responses, and writes both theme variants to `docs/screenshots/`. By default it captures `/`, `/login`, and `/play/demo-token`. Pass route paths or `--theme` to capture only selected pages or themes:
+
+```bash
+npm run screenshots -- /login /play/demo-token --theme dark
+```
 
 ## Features
 

@@ -1,130 +1,115 @@
 # Jelly Public Music Share
 
-[![Under Construction](https://img.shields.io/badge/Status-Stable-green)](https://github.com/BelphegorPrime/jelly-public-music-share)
+Share tracks from a self-hosted Jellyfin or Navidrome library without creating accounts for listeners. Search your library, create a link with configurable expiry and usage limits, and send it to the person who wants to listen.
 
-A self-hosted music sharing platform that allows you to share individual songs from your Jellyfin library with others through secure, one-time use links.
+Links open a focused playback page and do not give listeners access to your music library. Link expiry, usage limits, and allowed renewals can be set when creating a link.
 
-## Why I created this project
+![Library search and share-link settings](docs/screenshots/library.png)
 
-I use Jellyfin for my personal music library and wanted an easy way to share rare tracks that are not available on Spotify or YouTube.
-
-Creating full Jellyfin accounts just to send someone a single song felt unnecessary, so I built a small server that searches my library and generates secure, shareable links on demand.
-
-To keep it private and simple, links are intended to be one-time usable. Each link is backed by a JWT token, and the audio is streamed through a protected endpoint when opened.
+*Example interface with fictional sample data.*
 
 ## Features
 
-- Secure music sharing from Jellyfin libraries
-- Secure music sharing from Navidrome libraries (experimental)
-- Self-hosted deployment
-- Docker container support
-- Docker Compose support
-- Pre-built container on GHCR.io
-- One-time use tokens for enhanced security
-- Built-in authentication system
-- Client-side streaming interface
+- Search configured Jellyfin and/or Navidrome libraries.
+- Create share links with configurable expiry, usage limits, and renewals.
+- Stream shared tracks on a separate playback page.
+- Optional lyrics and track metadata on the playback page.
+- Protect library search and link creation behind owner authentication.
+- Store token and request data in SQLite.
+- Deploy with Docker Compose or the prebuilt image from GitHub Container Registry.
 
-## Getting Started
+## Quick Start: Docker Compose
 
-### Docker First Approach (Recommended)
+1. Clone the repository and enter its directory:
 
-The easiest way to get started is using the pre-built Docker container from GitHub Container Registry:
+	```bash
+	git clone https://github.com/BelphegorPrime/jelly-public-music-share.git
+	cd jelly-public-music-share
+	```
 
-1. Download the `.env` file:
+2. Create and edit the environment file:
+
+	```bash
+	cp .env.example .env
+	```
+
+	Configure **one or both** media providers in `.env`. Jellyfin requires `JELLYFIN_URL`, `JELLYFIN_USERNAME`, and `JELLYFIN_API_KEY`; Navidrome requires `NAVIDROME_URL`, `NAVIDROME_USERNAME`, and `NAVIDROME_PASSWORD`. Set a strong `AUTH_PASSWORD` and replace both JWT secrets with unique random values. For example, run `openssl rand -hex 32` twice and use the outputs for `JWT_SECRET_OWNER` and `JWT_SECRET_CONSUMER`.
+
+	When running in Docker Compose, use a media-server address reachable from the container. `localhost` inside the container refers to the container itself; on Docker Desktop, `host.docker.internal` can reach services on the host.
+
+3. Build and start the app:
+
+	```bash
+	docker compose up -d --build
+	```
+
+4. Open [http://localhost:3000](http://localhost:3000) and sign in with the `AUTH_USERNAME` and `AUTH_PASSWORD` from `.env` (the example username is `admin`).
+
+Compose persists application data in `./data`. To inspect logs or stop the app:
+
 ```bash
-wget https://raw.githubusercontent.com/BelphegorPrime/jelly-public-music-share/main/.env.example -O .env
+docker compose logs -f
+docker compose down
 ```
 
-2. Edit the `.env` file with your Jellyfin details:
+### Run the prebuilt image
+
+For a standalone Docker deployment, after creating and configuring `.env` as above:
+
 ```bash
-nano .env
+docker run -d \
+  --name jelly-public-music-share \
+  --env-file .env \
+  -p 3000:3000 \
+  -v "$PWD/data:/data" \
+  --restart unless-stopped \
+  ghcr.io/belphegoprime/jelly-public-music-share:latest
 ```
 
-3. Run with Docker Compose:
-```bash
-wget https://raw.githubusercontent.com/BelphegorPrime/jelly-public-music-share/main/docker-compose.yml
-docker compose up -d
-```
+## Configuration
 
-### Navidrome Support (Experimental)
+At least one media provider must be configured. Use the service URL and credentials appropriate for your deployment:
 
-To use Navidrome instead of Jellyfin, uncomment the Navidrome configuration in your `.env` file and provide the required Navidrome credentials:
+| Variable | Purpose |
+| --- | --- |
+| `JELLYFIN_URL` | Jellyfin server URL, for example `http://jellyfin:8096` |
+| `JELLYFIN_USERNAME` | Jellyfin account used by the app |
+| `JELLYFIN_API_KEY` | Jellyfin API key |
+| `NAVIDROME_URL` | Navidrome server URL, for example `http://navidrome:4533` |
+| `NAVIDROME_USERNAME` | Navidrome account used by the app |
+| `NAVIDROME_PASSWORD` | Navidrome account password |
+| `AUTH_USERNAME` / `AUTH_PASSWORD` | Credentials for the app owner login |
+| `JWT_SECRET_OWNER` | Secret used to sign owner authentication tokens |
+| `JWT_SECRET_CONSUMER` | Secret used to sign shared-song tokens |
+| `BASE_URL` | Public app URL used when generating share links; set this behind a reverse proxy |
+| `TOKEN_EXPIRY_MINUTES` | Default link expiry in minutes (default: `1440`) |
+| `TOKEN_USAGE_LIMIT` | Default number of permitted link uses (default: `1`) |
+| `TOKEN_ALLOWED_RENEWAL_COUNT` | Default number of replacement links allowed (default: `0`) |
+| `DATA_DIR` | Application data directory (default: `/data` in Docker) |
 
-```
-# Navidrome Configuration
-NAVIDROME_URL=http://localhost:4533
-NAVIDROME_USERNAME=your_navidrome_username
-NAVIDROME_PASSWORD=your_navidrome_password
-```
-
-The application will automatically detect which media server is configured and use the appropriate service. If both services are configured, both can be searched.
-
-### Manual Setup (Alternative)
-
-#### Prerequisites
-
-- Docker (recommended)
-
-OR
-
-- Node.js (v24+)
-- npm
-- FFmpeg (for audio transcoding)
-- SQLite (for database storage)
-
-#### Installation
-
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Build the project: `npm run build`
-4. Start the server: `npm start`
-
-#### Development
-
-To run in development mode:
-```bash
-npm run dev
-```
-
-### Docker Deployment
-
-For local Docker deployment:
-```bash
-docker build -t jelly-public-music-share .
-docker run -p 3000:3000 jelly-public-music-share
-```
-
-The application will be available at `http://localhost:3000`
+The owner can adjust expiry, usage limits, and renewals in the library screen. Keep `.env` private and do not expose the app directly to the internet without HTTPS and an appropriate reverse proxy.
 
 ## Development
 
-### Running Locally
+**Requirements:** Node.js 24 or later, npm, and FFmpeg. SQLite is managed by the application.
+
+Install the backend and frontend dependencies, and configure the provider and authentication variables in `.env`:
 
 ```bash
-npm run dev
+npm install
+npm install --prefix client
 ```
 
-### Build Process
+Build both parts of the app and start the server:
 
 ```bash
 npm run build
+npm run build --prefix client
+npm start
 ```
 
-### Database Management
-
-The application uses SQLite with Drizzle ORM. Useful commands:
-
-```bash
-# Generate migrations
-npm run db:generate
-
-# Apply migrations
-npm run db:migrate
-
-# Push schema changes
-npm run db:push
-```
+The app is served at [http://localhost:3000](http://localhost:3000). For frontend development, run `npm run dev:server` from the repository root and `npm run dev` from `client/` in separate terminals; Vite serves the client at [http://localhost:5173](http://localhost:5173) and proxies API requests to the backend.
 
 ## License
 
-MIT
+[MIT](LICENSE)

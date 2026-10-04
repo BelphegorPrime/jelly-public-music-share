@@ -140,6 +140,9 @@ export default function SearchPage() {
               <p className='text-xs text-gray-500 mt-1'>
                 How long the link will be valid (in minutes)
               </p>
+              <p className='text-[11px] text-gray-400 mt-1'>
+                That would be {(tokenExpiryMinutes / 60).toFixed(2)} hours or {(tokenExpiryMinutes / (60 * 24)).toFixed(2)} days
+              </p>
             </div>
             <div>
               <label className='block text-sm font-medium mb-1'>Usage Limit</label>

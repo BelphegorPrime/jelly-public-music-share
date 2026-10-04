@@ -22,7 +22,7 @@ export class CleanupService {
 
       for (const file of files) {
         // Only clean files that end with .mp3 (transcoded files)
-        if (file.endsWith('.mp3')) {
+        if (file.endsWith('.mp3') || file.endsWith("_cover.jpg")) {
           const filePath = path.join(SONG_DOWNLOAD_DIR, file);
           try {
             const stats = await fs.promises.stat(filePath);

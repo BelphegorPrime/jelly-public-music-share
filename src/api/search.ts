@@ -1,13 +1,10 @@
 import express, { Request, Response } from 'express';
 import { container } from '../di/container';
-import { JellyfinService } from '../services/jellyfin/jellyfin.service';
-import { JELLYFIN_URL } from '../config';
+import { MediaService } from '../services/media/media.service';
 import { authenticate } from '../middleware/auth.middleware';
-import { getDurartionInMinutesAndSeconds } from '../utils/getDurartionInMinutesAndSeconds';
-import { getSongData } from '../utils/getSongData';
 
 const router = express.Router();
-const jellyfinService = container.resolve(JellyfinService);
+const mediaService = container.resolve(MediaService);
 
 // GET /api/search - Search for music
 router.get('/', authenticate, async (req: Request, res: Response) => {
@@ -18,13 +15,10 @@ router.get('/', authenticate, async (req: Request, res: Response) => {
   }
 
   try {
-    // Search for music using Jellyfin service
-    const results = await jellyfinService.searchMusic(query);
+    // Search for music using media service
+    const results = await mediaService.searchMusic(query);
     
-    // Format results to include essential information
-    const formattedResults = results.map(item => getSongData(item));
-
-    res.json({ results: formattedResults });
+    res.json({ results });
   } catch (error) {
     res.status(500).json({
       error: 'Failed to search for music',

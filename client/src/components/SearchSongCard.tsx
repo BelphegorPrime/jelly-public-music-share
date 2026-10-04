@@ -87,11 +87,11 @@ export default function SearchSongCard({
             return
         }
         if (!data) {
-                setRequestStarted(true);
-                const overwrites = { tokenExpiryMinutes, tokenUsageLimit }
-                const requestData = await request(song.id, showToast, overwrites);
-                setData(requestData);
-                refreshRequestedSongs();
+            setRequestStarted(true);
+            const overwrites = { tokenExpiryMinutes, tokenUsageLimit }
+            const requestData = await request(song.id, showToast, overwrites);
+            setData(requestData);
+            refreshRequestedSongs();
         } else {
             copyToClipboard(data.playUrl);
         }
@@ -112,6 +112,7 @@ export default function SearchSongCard({
                 </div>
 
                 <div className='flex-1'>
+                    <div>{song.source}</div>
                     <div className='font-semibold'>
                         {song.name} {requestsForSong.length > 0 && <span className='text-sm text-gray-500'>({requestsForSong.length} requested)</span>}
                     </div>

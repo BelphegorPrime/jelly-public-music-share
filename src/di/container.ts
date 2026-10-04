@@ -8,13 +8,17 @@ import { FileHandlerService } from '../services/file/file.handler.service';
 import { AuthTokenService } from '../services/token/auth-token.service';
 import { EphemeralTokenService } from '../services/token/ephemeral-token.service';
 import { SONG_DOWNLOAD_DIR } from '../config';
-import { JellyfinService } from '../services/jellyfin/jellyfin.service';
+import { MediaService } from '../services/media/media.service';
+import { JellyfinService } from '../services/media/jellyfin/jellyfin.service';
+import { NavidromeService } from '../services/media/navidrome/navidrome.service';
 import { DatabaseService } from '../db/database.service';
 import { RequestedSongsRepository } from '../db/repositories/requested-songs.repository';
 import { EphemeralTokensRepository } from '../db/repositories/ephemeral-tokens.repository';
 
 // Register interfaces with their implementations
 container.register<JellyfinService>('JellyfinService', { useClass: JellyfinService });
+container.register<NavidromeService>('NavidromeService', { useClass: NavidromeService });
+container.register<MediaService>('MediaService', { useClass: MediaService });
 container.register<FileServiceInterface>('FileServiceInterface', { useClass: FileService });
 
 // Register singleton token services

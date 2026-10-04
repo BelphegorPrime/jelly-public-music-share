@@ -31,7 +31,10 @@ export class SongPlaybackService {
     this.requestedSongsService = requestedSongsService;
   }
 
-  async requestSong(songId: string): Promise<{token: string, playUrl: string}> {
+  async requestSong(songId: string, overrides?: { 
+  tokenExpiryMinutes?: number; 
+  tokenUsageLimit?: number 
+}): Promise<{token: string, playUrl: string}> {
     try {
       // Get song info from Jellyfin
       const songInfo = await this.mediaService.getMusicById(songId);
@@ -62,7 +65,7 @@ export class SongPlaybackService {
         }
       }
 
-      const { token, expiresAt } = this.ephemeralTokenService.createEphemeralToken({ songId });
+      const { token, expiresAt } = this.ephemeralTokenService.createEphemeralToken({ songId }, overrides);
 
       // Return ephemeral token and play URL
       const playUrl = `${BASE_URL}/play/${token}`;

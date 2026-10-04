@@ -14,26 +14,6 @@ Links open a focused playback page and do not give listeners access to your musi
 
 These screenshots use fictional sample data and mocked API responses.
 
-From the repository root, install dependencies and Chromium once:
-
-```bash
-npm install
-npm install --prefix client
-npx playwright install chromium
-```
-
-After UI changes, regenerate the default screenshots:
-
-```bash
-npm run screenshots
-```
-
-The command starts the frontend, uses mocked API responses, and writes both theme variants to `docs/screenshots/`. By default it captures `/`, `/login`, and `/play/demo-token`. Pass route paths or `--theme` to capture only selected pages or themes:
-
-```bash
-npm run screenshots -- /login /play/demo-token --theme dark
-```
-
 ## Features
 
 - Search configured Jellyfin and/or Navidrome libraries.
@@ -124,6 +104,26 @@ Install the backend and frontend dependencies, and configure the provider and au
 ```bash
 npm install
 npm install --prefix client
+```
+
+### Screenshots
+
+Install Playwright's Chromium browser once:
+
+```bash
+npx playwright install chromium
+```
+
+After UI changes, regenerate screenshots for `/`, `/login`, and `/play/demo-token` in both themes:
+
+```bash
+npm run screenshots
+```
+
+The command starts the frontend, uses mocked API responses, and writes the screenshots to `docs/screenshots/`. Pass route paths or `--theme` to capture only selected pages or themes:
+
+```bash
+npm run screenshots -- /login /play/demo-token --theme dark
 ```
 
 Build both parts of the app and start the server:
